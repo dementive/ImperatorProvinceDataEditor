@@ -1,6 +1,6 @@
 # Imperator Rome Province Data Editor
 
-The Imperator Rome Province Data Editor is a 
+The Imperator Rome Province Data Editor is a cross platform modern Python customtkinter application that is used to manage and edit all of the data in the province setup folder.
 
 # Installation
 
@@ -60,3 +60,7 @@ Application Settings. All of these need to be set to the correct values for the 
 5. Province Ranks
 
 6. Trade Goods
+
+![Screenshot](/assets/image1.png)
+
+![Screenshot 2](/assets/image2.png)
