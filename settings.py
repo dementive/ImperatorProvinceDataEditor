@@ -17,6 +17,7 @@ class Settings:
         self.religions = list()
         self.province_ranks = list()
         self.trade_goods = list()
+        self.buildings = list()
 
     def write(self):
         # Write settings back to json file
@@ -34,7 +35,8 @@ class Settings:
             self.write_json_list(f, "cultures", self.cultures)
             self.write_json_list(f, "religions", self.religions)
             self.write_json_list(f, "province_ranks", self.province_ranks)
-            self.write_json_list(f, "trade_goods", self.trade_goods, end=True)
+            self.write_json_list(f, "trade_goods", self.trade_goods)
+            self.write_json_list(f, "buildings", self.buildings, end=True)
             f.write("}")
 
     def load(self):
@@ -57,6 +59,7 @@ class Settings:
         self.religions = settings["religions"]
         self.province_ranks = settings["province_ranks"]
         self.trade_goods = settings["trade_goods"]
+        self.buildings = settings["buildings"]
 
     def write_json_list(self, f, name, li, end=False):
         """

@@ -38,7 +38,6 @@ class ProvinceData:
         self.trade_goods = ""
         self.province_rank = ""
         self.civilization_value = ""
-        self.barbarian_power = ""
         self.holy_site = ""
 
         attr_list = [
@@ -50,7 +49,6 @@ class ProvinceData:
             "trade_goods",
             "province_rank",
             "civilization_value",
-            "barbarian_power",
             "holy_site",
         ]
         for attr, value in data:
@@ -72,7 +70,7 @@ def update_pop_tuple(pop_tuple):
 
 
 def get_province_output(province_data: dict):
-    # Return a tuple of the output for a province setup and it's localization key
+    # Return the output for a province that will be written to a province setup file
 
     province = f'{province_data["province_id"]}={{ # {province_data["province_name"]}\n'
     province += f'\tterrain="{province_data["terrain"]}"\n'
@@ -80,7 +78,7 @@ def get_province_output(province_data: dict):
     province += f'\treligion="{province_data["religion"]}"\n'
     province += f'\ttrade_goods="{province_data["trade_good"]}"\n'
     province += f'\tcivilization_value={province_data["civ_value"]}\n'
-    province += f'\tbarbarian_power={province_data["barb_value"]}\n'
+    province += f"\tbarbarian_power=0\n"
     province += f'\tprovince_rank="{province_data["province_rank"]}"\n'
 
     # Pop format:
@@ -299,35 +297,23 @@ def get_province_names():
     return province_names
 
 
-# GUI code
-
-
-def province_map_click_callback(event):
-    global application, changed_provinces_data
-
-    x, y = event.x_root, event.y_root
-    image = ImageGrab.grab((x, y, x + 1, y + 1))
-    color = image.getpixel((0, 0))
-
-    province_id = 0
-    if color not in province_definitions[1]:
-        return
-
-    idx = province_definitions[1].index(color)
-    province_id = province_definitions[0][idx].id
-
-    # Save all of the data from the current province into the main data frame
+def save_all_changes():
     current_pid = application.province_data_frame.province_id
     current_province_name = application.province_data_frame.province_name
     current_culture = application.province_data_frame.culture.get()
     current_religion = application.province_data_frame.religion.get()
     current_trade_good = application.province_data_frame.trade_good.get()
     current_civ_value = application.province_data_frame.civ_value.get()
-    current_barb_value = application.province_data_frame.barb_value.get()
     current_province_rank = application.province_data_frame.province_rank.get()
     current_terrain = application.province_data_frame.terrain.get()
     current_holy_site = application.province_data_frame.holy_site.get()
-    current_buildings = application.province_data_frame.buildings
+
+    current_buildings = list()
+    for i in application.province_data_frame.building_widgets:
+        building_type = i.building_type
+        building_count = i.building_count.get()
+        if building_count and building_count > 0:
+            current_buildings.append((building_type, str(building_count)))
 
     current_pops = list()
     for i in application.province_data_frame.pop_widgets:
@@ -347,14 +333,12 @@ def province_map_click_callback(event):
         "trade_good": current_trade_good,
         "province_rank": current_province_rank,
         "civ_value": current_civ_value,
-        "barb_value": current_barb_value,
         "holy_site": current_holy_site,
         "buildings": current_buildings,
         "pops": current_pops,
     }
 
-    if current_pid.get() not in changed_provinces_data:
-        changed_provinces_data[current_pid.get()] = current_province_data
+    changed_provinces_data[current_pid.get()] = current_province_data
 
     application.province_data_frame.province_names[current_pid.get()] = current_province_name.get()
 
@@ -382,12 +366,32 @@ def province_map_click_callback(event):
                         "trade_good": province_data.trade_goods,
                         "province_rank": province_data.province_rank,
                         "civ_value": province_data.civilization_value,
-                        "barb_value": province_data.barbarian_power,
                         "holy_site": province_data.holy_site,
                         "buildings": buildings,
                         "pops": pops,
                     }
                     file.write(get_province_output(province_data))
+
+
+# GUI code
+
+
+def province_map_click_callback(event):
+    global application, changed_provinces_data
+
+    x, y = event.x_root, event.y_root
+    image = ImageGrab.grab((x, y, x + 1, y + 1))
+    color = image.getpixel((0, 0))
+
+    province_id = 0
+    if color not in province_definitions[1]:
+        return
+
+    idx = province_definitions[1].index(color)
+    province_id = province_definitions[0][idx].id
+
+    # Save all of the data from the current province into the main data frame
+    save_all_changes()
 
     # Recreate the province data frame with the data from the clicked province
 
@@ -406,7 +410,6 @@ def province_map_click_callback(event):
             "trade_good": province_data.trade_goods,
             "province_rank": province_data.province_rank,
             "civilization_value": province_data.civilization_value,
-            "barbarian_power": province_data.barbarian_power,
             "holy_site": province_data.holy_site,
             "buildings": new_buildings,
             "pops": new_pops,
@@ -422,12 +425,8 @@ def province_map_click_callback(event):
     application.province_data_frame.province_rank = tk.StringVar(value=new_province_data["province_rank"])
 
     if province_id in changed_provinces:
-        application.province_data_frame.barb_value = tk.IntVar(value=int(new_province_data["barb_value"]))
         application.province_data_frame.civ_value = tk.IntVar(value=int(new_province_data["civ_value"]))
     else:
-        application.province_data_frame.barb_value = tk.IntVar(
-            value=int(new_province_data["barbarian_power"])
-        )
         application.province_data_frame.civ_value = tk.IntVar(
             value=int(new_province_data["civilization_value"])
         )
@@ -448,11 +447,18 @@ def province_map_click_callback(event):
     application.province_data_frame.province_rank_box.set(application.province_data_frame.province_rank.get())
 
     application.province_data_frame.civ_value_slider.set(application.province_data_frame.civ_value.get())
-    application.province_data_frame.barb_value_slider.set(application.province_data_frame.barb_value.get())
     application.province_data_frame.holy_site_entry.delete("0", tk.END)
     application.province_data_frame.holy_site_entry.insert(
         -1, application.province_data_frame.holy_site.get()
     )
+
+    # Destroy the existing building widgets and recreate new ones
+    for i in application.province_data_frame.building_widgets:
+        i.destroy()
+
+    application.province_data_frame.building_widgets = list()
+    for i in application.province_data_frame.buildings:
+        application.province_data_frame.create_building(i[0], i[1])
 
     # Destroy the existing pop widgets and recreate new ones
     for i in application.province_data_frame.pop_widgets:
@@ -811,9 +817,90 @@ class ProvinceMap(tk.Frame):
         canvas.grid(row=0, column=0)  # show widget
 
 
+class BuildingFrame(customtkinter.CTkFrame):
+    def __init__(self, master, name, amount, **kwargs):
+        color = "#D3D3D3" if settings.theme == "Light" else "#1a1a1a"
+        super().__init__(master, fg_color=color, **kwargs)
+
+        self.building_type = name
+        self.building_count = tk.IntVar(value=int(amount))
+
+        self.remove_buildings_button = customtkinter.CTkButton(
+            self, width=5, text="—", command=self.remove_buildings
+        )
+        self.remove_buildings_button.grid(row=0, column=0, padx=(150, 7), pady=(0, 0))
+        if self.building_count.get() == 1:
+            self.remove_buildings_button.configure(text="⨉")
+
+        self.add_buildings_button = customtkinter.CTkButton(
+            self, width=5, text="+", command=self.add_buildings
+        )
+        self.add_buildings_button.grid(row=0, column=0, padx=(7, 150), pady=(0, 0))
+
+        self.building_type_label = customtkinter.CTkLabel(
+            self,
+            text=f"{self.building_type} - {self.building_count.get()}",
+            font=customtkinter.CTkFont(size=12, weight="bold"),
+            justify="center",
+            anchor="w",
+            wraplength=110,
+        )
+        self.building_type_label.grid(row=0, column=0, padx=(5, 15), pady=(3, 3))
+
+        # Place frame on grid
+        self.grid(row=0, column=3, padx=(0, 0), pady=(0, 0), sticky="w")
+        self.grid_columnconfigure(0, weight=1)
+
+        # Keybindings
+        self.add_buildings_button.bind("<Button-3>", self.add_more_buildings)
+        self.remove_buildings_button.bind("<Button-3>", self.remove_more_buildings)
+
+    def update_label(self):
+        self.building_type_label.configure(text=f"{self.building_type} - {self.building_count.get()}")
+
+    def remove_buildings(self):
+        self.building_count = tk.IntVar(value=self.building_count.get() - 1)
+        self.update_label()
+        if self.building_count.get() == 1:
+            self.remove_buildings_button.configure(text="⨉")
+        if self.building_count.get() <= 0:
+            self.destroy()
+        self.master.set_changed()
+
+    def add_buildings(self):
+        from_x = False
+        if self.building_count.get() == 1:
+            from_x = True
+        self.building_count = tk.IntVar(value=self.building_count.get() + 1)
+        self.update_label()
+        if from_x:
+            self.remove_buildings_button.configure(text="—")
+        self.master.set_changed()
+
+    def add_more_buildings(self, event):
+        from_x = False
+        if self.building_count.get() == 1:
+            from_x = True
+        self.building_count = tk.IntVar(value=self.building_count.get() + 3)
+        self.update_label()
+        if from_x:
+            self.remove_buildings_button.configure(text="—")
+        self.master.set_changed()
+
+    def remove_more_buildings(self, event):
+        self.building_count = tk.IntVar(value=self.building_count.get() - 3)
+        self.update_label()
+        if self.building_count.get() == 1:
+            self.remove_buildings_button.configure(text="⨉")
+        if self.building_count.get() <= 0:
+            self.destroy()
+        self.master.set_changed()
+
+
 class PopFrame(customtkinter.CTkFrame):
     def __init__(self, master, popinfo, **kwargs):
-        super().__init__(master, fg_color="#1a1a1a", **kwargs)
+        color = "#D3D3D3" if settings.theme == "Light" else "#1a1a1a"
+        super().__init__(master, fg_color=color, **kwargs)
 
         self.poptype = popinfo[0]
         self.popcount = tk.IntVar(value=int(popinfo[1]))
@@ -894,9 +981,84 @@ class PopFrame(customtkinter.CTkFrame):
         self.master.set_changed()
 
 
+class AddBuildingsFrame(customtkinter.CTkFrame):
+    def __init__(self, master, **kwargs):
+        color = "#D3D3D3" if settings.theme == "Light" else "#1a1a1a"
+        super().__init__(master, fg_color=color, **kwargs)
+        self.building_type = tk.StringVar(value="port_building")
+        self.building_count = 1
+
+        # Culture combobox
+        self.building_combobox = customtkinter.CTkComboBox(
+            self,
+            width=160,
+            values=settings.buildings,
+            command=self.building_callback,
+            variable=self.building_type,
+        )
+        self.building_combobox.grid(row=1, column=0, padx=(5, 5), pady=(10, 0))
+        CTkToolTip(
+            self.building_combobox,
+            delay=0.5,
+            message=f"Change building type",
+            alpha=0.925,
+            border_color="#DCE4EE",
+            x_offset=-40,
+        )
+        CTkScrollableDropdown(
+            self.building_combobox,
+            command=self.building_dropdown_callback,
+            values=settings.buildings,
+            justify="left",
+            button_color="transparent",
+            autocomplete=True,
+            resize=False,
+            width=200,
+            height=200,
+            x=-16,
+        )
+
+        self.confirm_button = customtkinter.CTkButton(
+            self,
+            width=160,
+            text="Confirm",
+            command=self.confirm_callback,
+            fg_color="transparent",
+            border_width=2,
+            text_color=("gray10", "#DCE4EE"),
+        )
+        self.confirm_button.grid(row=2, column=0, padx=(4, 0), pady=(10, 5))
+        self.tooltip_2 = CTkToolTip(
+            self.confirm_button,
+            delay=0.5,
+            message=f"Add {self.building_count} {self.building_type.get()} buildings",
+            alpha=0.925,
+            border_color="#DCE4EE",
+            x_offset=-105,
+        )
+
+    def update_tooltip(self):
+        self.tooltip_2.configure(
+            message=f"Add {self.building_count} {self.building_type.get()}",
+        )
+
+    def confirm_callback(self):
+        self.master.create_building(self.building_type.get(), self.building_count)
+
+    def building_callback(self, event):
+        self.building_type = tk.StringVar(value=self.building_combobox.get())
+        self.update_tooltip()
+
+    def building_dropdown_callback(self, choice):
+        self.building_type = tk.StringVar(value=choice)
+        self.building_combobox.set(self.building_type.get())
+        self.update_tooltip()
+
+
 class AddPopsFrame(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
-        super().__init__(master, fg_color="#1a1a1a", **kwargs)
+        color = "#D3D3D3" if settings.theme == "Light" else "#1a1a1a"
+        super().__init__(master, fg_color=color, **kwargs)
 
         self.culture_list = [""] + settings.cultures
         self.religion_list = [""] + settings.religions
@@ -1020,9 +1182,7 @@ class AddPopsFrame(customtkinter.CTkFrame):
             border_width=2,
             text_color=("gray10", "#DCE4EE"),
         )
-        self.confirm_button.grid(
-            row=len(self.pop_type_list) + 1, column=0, padx=(4, 0), pady=(15, 0)
-        )  # Row is big so pop frames can be added
+        self.confirm_button.grid(row=len(self.pop_type_list) + 1, column=0, padx=(4, 0), pady=(15, 0))
         self.tooltip_2 = CTkToolTip(
             self.confirm_button,
             delay=0.5,
@@ -1091,6 +1251,7 @@ class ProvinceDataFrame(customtkinter.CTkScrollableFrame):
         header_fontsize = 18
         self.startup_complete = False
         self.pop_widgets = list()
+        self.building_widgets = list()
 
         self.province_id = tk.StringVar(value=province_data["province_id"])
         self.terrain = tk.StringVar(value=province_data["terrain"])
@@ -1100,12 +1261,12 @@ class ProvinceDataFrame(customtkinter.CTkScrollableFrame):
         self.province_rank = tk.StringVar(value=province_data["province_rank"])
         self.holy_site = tk.StringVar(value=province_data["holy_site"])
         self.pops = province_data["pops"]
-        # Buildings don't have a GUI element because they shouldn't be set in province setup even though they can be. Save them here just so the existing entries don't get erased.
         self.buildings = province_data["buildings"]
         # Slider values need to be IntVar
         self.civ_value = tk.IntVar(value=province_data["civilization_value"])
-        self.barb_value = tk.IntVar(value=province_data["barbarian_power"])
-        self.current_open_row = 15
+
+        self.current_open_buildings_row = 15
+        self.current_open_pops_row = 101
 
         # Load province names localization
         self.province_names = get_province_names()
@@ -1273,13 +1434,30 @@ class ProvinceDataFrame(customtkinter.CTkScrollableFrame):
         )
         self.province_rank_label.grid(row=8, column=0, padx=(0, 143), pady=(20, 0))
 
+        # Holy site editbox
+        self.holy_site_entry_label = customtkinter.CTkLabel(
+            self,
+            text="Holy Site",
+            wraplength=50,
+            font=customtkinter.CTkFont(size=14, weight="bold"),
+        )
+        self.holy_site_entry_label.grid(row=9, column=0, padx=(0, 145), pady=(20, 0))
+        self.holy_site_entry = customtkinter.CTkEntry(
+            self,
+            placeholder_text="1",
+            textvariable=self.holy_site,
+            width=upper_box_width,
+            justify="left",
+        )
+        self.holy_site_entry.grid(row=9, column=0, padx=content_x, pady=(20, 0))
+
         # Civ value slider
         self.civ_value_label = customtkinter.CTkLabel(
             self,
             text=f"Civilization Value: {self.civ_value.get()}",
             font=customtkinter.CTkFont(size=header_fontsize, weight="bold"),
         )
-        self.civ_value_label.grid(row=9, column=0, padx=(0, 0), pady=(20, 0))
+        self.civ_value_label.grid(row=10, column=0, padx=(0, 0), pady=(20, 0))
         self.civ_value_slider = customtkinter.CTkSlider(
             self,
             variable=self.civ_value,
@@ -1287,41 +1465,24 @@ class ProvinceDataFrame(customtkinter.CTkScrollableFrame):
             to=100,
             command=self.update_civ_value,
         )
-        self.civ_value_slider.grid(row=10, column=0, padx=(4, 0), pady=(4, 0))
+        self.civ_value_slider.grid(row=11, column=0, padx=(4, 0), pady=(4, 0))
 
-        # Barbarian power slider
-        self.barb_value_label = customtkinter.CTkLabel(
+        # Building widgets
+        self.buildings_label = customtkinter.CTkLabel(
             self,
-            text=f"Barbarian Power: {self.barb_value.get()}",
+            text="Buildings",
             font=customtkinter.CTkFont(size=header_fontsize, weight="bold"),
         )
-        self.barb_value_label.grid(row=11, column=0, padx=(0, 0), pady=(20, 0))
-        self.barb_value_slider = customtkinter.CTkSlider(
-            self,
-            variable=self.barb_value,
-            from_=0,
-            to=100,
-            command=self.update_barb_value,
-        )
-        self.barb_value_slider.grid(row=12, column=0, padx=(4, 0), pady=(4, 10))
+        self.buildings_label.grid(row=13, column=0, padx=(0, 0), pady=(10, 5))
+        for i in self.buildings:
+            self.create_building(i[0], i[1])
 
-        # Holy site editbox
-        self.holy_site_entry_label = customtkinter.CTkLabel(
-            self,
-            text="Holy Site",
-            font=customtkinter.CTkFont(size=header_fontsize, weight="bold"),
-        )
-        self.holy_site_entry_label.grid(row=13, column=0, padx=(0, 0), pady=(0, 0))
-        self.holy_site_entry = customtkinter.CTkEntry(
-            self,
-            placeholder_text="1",
-            textvariable=self.holy_site,
-            width=120,
-            justify="center",
-        )
-        self.holy_site_entry.grid(row=14, column=0, padx=(4, 0), pady=(4, 15))
+        # Create add buildings frame
+        self.add_pops_frame = AddBuildingsFrame(self)
+        # This is placed on row 99, which is right before the first population widget.
+        self.add_pops_frame.grid(row=99, column=0, padx=(12, 9), pady=(4, 0))
 
-        # Population Widgets and button
+        # Population widgets
 
         # Pops look like this when they get here:
         # [
@@ -1333,11 +1494,17 @@ class ProvinceDataFrame(customtkinter.CTkScrollableFrame):
         #     ("tribesmen", [("culture", ""), ("religion", ""), ("amount", "4")]),
         # ]
 
+        self.pops_label = customtkinter.CTkLabel(
+            self,
+            text="Population",
+            font=customtkinter.CTkFont(size=header_fontsize, weight="bold"),
+        )
+        self.pops_label.grid(row=100, column=0, padx=(0, 0), pady=(10, 5))
+
         for i in self.pops:
             self.create_pop(i[0], i[1][2][1], i[1][0][1], i[1][1][1])
 
         # Create add pops frame
-        self.current_open_row += 1
         self.add_pops_frame = AddPopsFrame(self)
         self.add_pops_frame.grid(
             row=500, column=0, padx=(12, 9), pady=(4, 0)
@@ -1410,11 +1577,6 @@ class ProvinceDataFrame(customtkinter.CTkScrollableFrame):
         self.civ_value_label.configure(text=f"Civilization Value: {self.civ_value.get()}")
         self.set_changed()
 
-    def update_barb_value(self, event):
-        self.barb_value = tk.IntVar(value=int(self.barb_value_slider.get()))
-        self.barb_value_label.configure(text=f"Barbarian Power: {self.barb_value.get()}")
-        self.set_changed()
-
     def holy_site_callback(self):
         self.holy_site = tk.StringVar(value=self.holy_site_entry.get())
         self.set_changed()
@@ -1438,10 +1600,18 @@ class ProvinceDataFrame(customtkinter.CTkScrollableFrame):
 
     def create_pop(self, poptype, popcount, popculture, popreligion):
         # Create a new pop frame
-        self.current_open_row += 1
+        self.current_open_pops_row += 1
         new_pop = PopFrame(self, popinfo=(poptype.title(), popcount, popculture.title(), popreligion))
-        new_pop.grid(row=self.current_open_row, column=0, padx=(12, 9), pady=(4, 0))
+        new_pop.grid(row=self.current_open_pops_row, column=0, padx=(12, 9), pady=(4, 0))
         self.pop_widgets.append(new_pop)
+        self.set_changed()
+
+    def create_building(self, name, amount):
+        # Create a new pop frame
+        self.current_open_buildings_row += 1
+        new_building = BuildingFrame(self, name, amount)
+        new_building.grid(row=self.current_open_buildings_row, column=0, padx=(12, 9), pady=(4, 0))
+        self.building_widgets.append(new_building)
         self.set_changed()
 
 
@@ -1752,7 +1922,7 @@ class App(customtkinter.CTk):
         self.grid_rowconfigure((0, 1, 2), weight=1)
 
         # Create province data frame
-        current_data = all_province_data[0]  # Some random ocean province
+        current_data = all_province_data[0]
         pops, buildings = get_pops_and_buildings(current_data)
         province_data = ProvinceData(current_data)
 
@@ -1764,7 +1934,6 @@ class App(customtkinter.CTk):
             "trade_good": province_data.trade_goods,
             "province_rank": province_data.province_rank,
             "civilization_value": province_data.civilization_value,
-            "barbarian_power": province_data.barbarian_power,
             "holy_site": province_data.holy_site,
             "buildings": buildings,
             "pops": pops,
@@ -1798,30 +1967,36 @@ class App(customtkinter.CTk):
         else:
             self.settings.focus()
 
+    def on_close(self):
+        # Save all the changes made to provinces and localization
+        # application.destroy() has to execute to close the app so we just except everything here to ensure it happens so you don't get stuck in the app if there is an error.
 
-def on_close():
-    loc_keys = list()
-    try:
-        for i, province in enumerate(application.province_data_frame.province_names):
-            loc_key = ""
-            if province not in changed_provinces:
-                loc_key = f"PROV{i+1}: " + f'"{application.province_data_frame.province_names[province]}"'
-            else:
-                for item in changed_provinces:
-                    if int(item) == i + 1:
-                        loc_key = f"PROV{i+1}: " + f'"{changed_provinces_data[item]["province_name"]}"'
-            if loc_key:
-                loc_keys.append(loc_key)
-        Path("output").mkdir(parents=True, exist_ok=True)
-        # Write the file
-        with open("output/" + "provincenames_l_english.yml", "w") as file:
-            file.write("l_english:\n")
-            for i in loc_keys:
-                file.write(f" {i}\n")
-    except Exception as e:
-        print(e)
+        loc_keys = list()
+        try:
+            save_all_changes()
+        except Exception as e:
+            print(e)
+        try:
+            for i, province in enumerate(application.province_data_frame.province_names):
+                loc_key = ""
+                if province not in changed_provinces:
+                    loc_key = f"PROV{i+1}: " + f'"{application.province_data_frame.province_names[province]}"'
+                else:
+                    for item in changed_provinces:
+                        if int(item) == i + 1:
+                            loc_key = f"PROV{i+1}: " + f'"{changed_provinces_data[item]["province_name"]}"'
+                if loc_key:
+                    loc_keys.append(loc_key)
+            Path("output").mkdir(parents=True, exist_ok=True)
+            # Write the file
+            with open("output/" + "provincenames_l_english.yml", "w") as file:
+                file.write("l_english:\n")
+                for i in loc_keys:
+                    file.write(f" {i}\n")
+        except Exception as e:
+            print(e)
 
-    application.destroy()
+        application.destroy()
 
 
 if __name__ == "__main__":
@@ -1865,5 +2040,5 @@ if __name__ == "__main__":
 
     application = App()
     application.after(0, lambda: application.state("zoomed"))
-    application.protocol("WM_DELETE_WINDOW", on_close)
+    application.protocol("WM_DELETE_WINDOW", application.on_close)
     application.mainloop()
