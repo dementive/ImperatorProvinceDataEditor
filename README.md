@@ -4,7 +4,7 @@ The Imperator Rome Province Data Editor is a cross platform modern Python custom
 
 # Installation
 
-Download the zip file of the repository and take the binary file out of the bin folder and put it where you want to use it.
+Download the latest release of the repository and take the binary file out of the bin folder and put it where you want to use it.
 
 # Setup
 
