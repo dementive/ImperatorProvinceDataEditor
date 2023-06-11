@@ -24,7 +24,7 @@ In addition to these files you will also need to set all of the Application Sett
 
 2. Open the Application.
 
-3. There is a big zoom area with the provinces.png in it that can be zoomed into and moved around. There is a frame on the side of the screen that has all the province data in it, here you can edit any data associated with the province and add new pop to the province.
+3. There is a zoom area with the provinces.png in it that can be zoomed into and moved around. There is also a frame on the side of the screen that has all the province data in it, here you can edit any data associated with the province and add new pops to the province.
 
 4. Right-clicking any province on the province map will load all of it's information into the province data frame. When a province is right-clicked, if any province data has been changed, a save is triggered that will automatically rewrite all the data that was in the original file the province was found in. Note that right-clicking is currently the only way to trigger a save.
 
@@ -34,7 +34,6 @@ In addition to these files you will also need to set all of the Application Sett
 
 There are several settings that allow you to change the appearance of the application.
 All of the UI settings can be changed with a settings window that is opened with a button in the topbar.
-Some of the settings are needed to define the data that is used in the application.
 
 UI settings
 1. Theme
@@ -47,7 +46,8 @@ UI settings
 
 5. Menu Style
 
-Application Settings. All of these need to be set to the correct values for the mod you are working on or the application will not function correctly as it will not have the data it needs.
+Application Settings
+All of these need to be set to the correct values for the mod you are working on or the application will not function correctly as it will not have the data it needs.
 
 1. Pop Types
 
