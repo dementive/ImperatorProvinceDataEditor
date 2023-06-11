@@ -4,7 +4,7 @@ The Imperator Rome Province Data Editor is a cross platform modern Python custom
 
 # Installation
 
-Download the latest release of the repository and take the binary file out of the bin folder and put it where you want to use it.
+Go to the latest release and download the executable file.
 
 # Setup
 
@@ -16,7 +16,7 @@ If you are setting the app up for the first time you will need to put a few file
 
 3. provinces.png - Your mod's main province image file
 
-4. Add the themes directory and all the files in it if you want to use some of the custom themes
+4. Add the themes directory and all the files in it if you want to use some of the custom themes. Without these the gold, red, orange, and purple color schemes will not load.
 
 In addition to these files you will also need to set all of the Application Settings that are listed below in the settings.json file to the correct values for your mod.
 
