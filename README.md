@@ -16,6 +16,8 @@ If you are setting the app up for the first time you will need to put a few file
 
 3. provinces.png - Your mod's main province image file
 
+4. Add the themes directory and all the files in it if you want to use some of the custom themes
+
 In addition to these files you will also need to set all of the Application Settings that are listed below in the settings.json file to the correct values for your mod.
 
 # How to Use
