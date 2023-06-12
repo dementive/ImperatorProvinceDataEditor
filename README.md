@@ -62,4 +62,7 @@ All of these need to be set to the correct values or the application will not fu
 
 ![Screenshot 2](/assets/image2.png)
 
+![Screenshot 4](/assets/image4.png)
+
 ![Screenshot 3](/assets/image3.png)
+
