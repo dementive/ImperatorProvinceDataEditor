@@ -4,10 +4,12 @@ import pandas as pd
 import math
 import re
 import warnings
+import threading
 from platform import system
 from pathlib import Path
-from PIL import Image, ImageTk, ImageGrab
+from PIL import Image, ImageTk, ImageGrab, ImageFile
 from settings import Settings
+from jomini import *
 from CTkExtensions.CTkScrollableDropdown import *
 from CTkExtensions.CTkToolTip import *
 from CTkExtensions.CTkMenuBar import *
@@ -23,6 +25,43 @@ customtkinter.set_widget_scaling(int(settings.ui_scaling.replace("%", "")) / 100
 OS = system()
 changed_provinces = set()
 changed_provinces_data = dict()
+
+# Classes from sublime imperator plugin
+
+class ImperatorBuilding(GameObjectBase):
+    def __init__(self):
+        super().__init__([settings.path_to_mod], settings.path_to_base_game)
+        self.get_data("common\\buildings")
+
+class ImperatorCulture(GameObjectBase):
+    def __init__(self):
+        super().__init__([settings.path_to_mod], settings.path_to_base_game,level=2)
+        self.get_data("common\\cultures")
+
+class ImperatorPop(GameObjectBase):
+    def __init__(self):
+        super().__init__([settings.path_to_mod], settings.path_to_base_game)
+        self.get_data("common\\pop_types")
+
+class ImperatorProvinceRank(GameObjectBase):
+    def __init__(self):
+        super().__init__([settings.path_to_mod], settings.path_to_base_game)
+        self.get_data("common\\province_ranks")
+
+class ImperatorReligion(GameObjectBase):
+    def __init__(self):
+        super().__init__([settings.path_to_mod], settings.path_to_base_game)
+        self.get_data("common\\religions")
+
+class ImperatorTerrain(GameObjectBase):
+    def __init__(self):
+        super().__init__([settings.path_to_mod], settings.path_to_base_game)
+        self.get_data("common\\terrain_types")
+
+class ImperatorTradeGood(GameObjectBase):
+    def __init__(self):
+        super().__init__([settings.path_to_mod], settings.path_to_base_game)
+        self.get_data("common\\trade_goods")
 
 # Non-GUI code
 
@@ -118,7 +157,7 @@ def get_province_output(province_data: dict):
 def get_pops_and_buildings(current_data):
     buildings = list()
     pops = list()
-    for i, element in enumerate(current_data):
+    for element in current_data:
         if any(element[0].startswith(pop_type) for pop_type in settings.pop_types):
             pops.append(element)
         if element[0].endswith("_building"):
@@ -133,11 +172,10 @@ class ProvinceDefinition:
         self.id = pid
         self.rgb = (r, g, b)
 
-
 def fix_definition_csv():
     # skip first 2 lines because they break pandas.read_csv
     first_id = ""
-    with open("definition.csv") as file:
+    with open(settings.definition_csv) as file:
         next(file)
         next(file)
         content = []
@@ -146,17 +184,12 @@ def fix_definition_csv():
                 first_id = line
             content.append(line)
 
-    with open("fixed_definition.csv", "w") as output_file:
-        for line in content:
-            output_file.write(line)
-
     return first_id
-
 
 def load_definitions():
     first_id = fix_definition_csv()
     first_province = first_id.split(";")
-    data = pd.read_csv("fixed_definition.csv", sep=";")
+    data = pd.read_csv(settings.definition_csv, sep=";", skiprows=2)
     df = pd.DataFrame(data)
     id_column = df.iloc[:, 0]
     r_column = df.iloc[:, 1]
@@ -176,10 +209,12 @@ def load_definitions():
     rgb_list.append(p.rgb)
     province_list.append(p)
     for i in province_data:
-        p = ProvinceDefinition(i[0], i[1], i[2], i[3])
+        id_str = str(i[0])
+        if id_str.startswith("#") or id_str.startswith(" #"):
+            continue
+        p = ProvinceDefinition(id_str, i[1], i[2], i[3])
         province_list.append(p)
         rgb_list.append(p.rgb)
-
     return (province_list, rgb_list)
 
 
@@ -353,7 +388,7 @@ def save_all_changes():
                     province_data = changed_provinces_data[i]
                     file.write(get_province_output(province_data))
                 else:
-                    current_data = all_province_data[int(i) - 1]
+                    current_data = all_province_data[i]
                     pops, buildings = get_pops_and_buildings(current_data)
                     province_data = ProvinceData(current_data)
                     name = application.province_data_frame.province_names[province_data.province_id]
@@ -389,7 +424,7 @@ def province_map_click_callback(event):
 
     idx = province_definitions[1].index(color)
     province_id = province_definitions[0][idx].id
-
+    
     # Save all of the data from the current province into the main data frame
     save_all_changes()
 
@@ -398,7 +433,7 @@ def province_map_click_callback(event):
     if province_id in changed_provinces:
         new_province_data = changed_provinces_data[province_id]
     else:
-        current_data = all_province_data[int(province_id) - 1]
+        current_data = all_province_data[province_id]
         new_pops, new_buildings = get_pops_and_buildings(current_data)
         province_data = ProvinceData(current_data)
 
@@ -545,6 +580,8 @@ class ZoomArea:
         Image.MAX_IMAGE_PIXELS = 1000000000  # suppress DecompressionBombError for big image
         with warnings.catch_warnings():  # suppress DecompressionBombWarning for big image
             warnings.simplefilter("ignore")
+            # This next line fixes this: https://github.com/python-pillow/Pillow/issues/5631
+            ImageFile.LOAD_TRUNCATED_IMAGES = True
             self.__image = Image.open(self.path)  # open image, but down't load it into RAM
         self.imwidth, self.imheight = self.__image.size  # public for outer classes
         if (
@@ -1080,6 +1117,7 @@ class AddPopsFrame(customtkinter.CTkFrame):
                 text=pop,
                 command=self.poptype_callback,
                 variable=self.radio_var,
+                width=120,
                 value=i + 1,
             )
             radio.grid(row=i, column=0, padx=(0, 65), pady=(3, 3))
@@ -1922,7 +1960,7 @@ class App(customtkinter.CTk):
         self.grid_rowconfigure((0, 1, 2), weight=1)
 
         # Create province data frame
-        current_data = all_province_data[0]
+        current_data = all_province_data["1"]
         pops, buildings = get_pops_and_buildings(current_data)
         province_data = ProvinceData(current_data)
 
@@ -1942,7 +1980,7 @@ class App(customtkinter.CTk):
 
         # Create province map
         self.province_frame = customtkinter.CTkFrame(self, height=1000)
-        ProvinceMap(self.province_frame, path="provinces.png")
+        ProvinceMap(self.province_frame, path=settings.province_png)
         self.province_frame.grid(row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew")
         self.grid_propagate(False)
 
@@ -1998,18 +2036,63 @@ class App(customtkinter.CTk):
 
         application.destroy()
 
+def add_game_objects_to_settings():
+
+    def load_first():
+        buildings = ImperatorBuilding()
+        settings.buildings = [x.key for x in buildings]
+        pop_types = ImperatorPop()
+        pop_types = [x.key for x in pop_types]
+        for i in pop_types:
+            if i == "nobles":
+                pop_types.remove(i)
+                pop_types.insert(0, i)
+            if i == "slaves":
+                pop_types.remove(i)
+                pop_types.append(i)
+
+        settings.pop_types = pop_types
+
+        province_ranks = ImperatorProvinceRank()
+        settings.province_ranks = [x.key for x in province_ranks]
+        religions = ImperatorReligion()
+        settings.religions = [x.key for x in religions]
+
+    def load_second():
+        cultures = ImperatorCulture()
+        settings.cultures = [x.key for x in cultures]
+        terrain_types = ImperatorTerrain()
+        settings.terrain_types = [x.key for x in terrain_types]
+        trade_goods = ImperatorTradeGood()
+        settings.trade_goods = [x.key for x in trade_goods]
+
+    thread1 = threading.Thread(target=load_first);
+    thread2 = threading.Thread(target=load_second)
+
+    thread1.start()
+    thread2.start()
+    thread1.join()
+    thread2.join()
 
 if __name__ == "__main__":
     global all_province_data, application
 
+    # Load game data from mods and vanilla
+    add_game_objects_to_settings()
+
     # Parse all province setup data
-    path_to_setup = Path(settings.path_to_province_setup)
+    path_to_setup = Path(settings.path_to_mod + "\\setup\\provinces")
+    path_to_base_game = Path(settings.path_to_base_game)
 
     if not path_to_setup.is_dir():
-        error = "The path to province setup defined in settings.json is not a valid directory!"
+        error = "The path to your mod defined in settings.json is not a valid directory!"
         raise NotADirectoryError(error)
 
-    all_province_data = list()
+    if not path_to_base_game.is_dir():
+        error = "The path to the base game defined in settings.json is not a valid directory!"
+        raise NotADirectoryError(error)
+
+    all_province_data = dict()
     id_to_file_dict = dict()
 
     try:
@@ -2019,7 +2102,8 @@ if __name__ == "__main__":
             data = get_provinces_in_file(text)
             for i in data:
                 parsed_data = parse_province_data(i)
-                all_province_data.append(parsed_data)
+                all_province_data[parsed_data[0][1]] = parsed_data
+                #all_province_data.append(parsed_data)
                 id_to_file_dict[parsed_data[0][1]] = filename.name
     except:
         error = (
@@ -2027,16 +2111,12 @@ if __name__ == "__main__":
             + "Make sure the path to the province setup directory is correct and there are no additional files in the province setup folder."
         )
         raise RuntimeError(error)
-
     # Load province definitions
     try:
         province_definitions = load_definitions()
     except:
         error = "There was an error loading province definitions. Make sure the definition.csv is formatted in the same way as the base game."
         raise RuntimeError(error)
-
-    # Sort data by province ID
-    all_province_data = sorted(all_province_data, key=lambda x: int(x[0][1]))
 
     application = App()
     application.after(0, lambda: application.state("zoomed"))

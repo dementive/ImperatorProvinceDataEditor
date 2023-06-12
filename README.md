@@ -4,21 +4,21 @@ The Imperator Rome Province Data Editor is a cross platform modern Python custom
 
 # Installation
 
-Go to the latest release and download the executable file.
+1. Download the repository.
+
+2. Make a folder in your mod named `Province Data Editor`
+
+3. Copy the contents of the `bin` folder into the new folder.
+
+4. If your mod does not change the provinces.png or definition.csv set the `using_base_game_province_definitions` setting to `true`.
 
 # Setup
 
-If you are setting the app up for the first time you will need to put a few files from your mod into the same directory as the app.
+If you are setting the app up for the first time you will need to change a few files.
 
-1. definition.csv - Your mod's province definition file
+1. settings.json - The application settings, two paths need to be set here for the app to work correctly. The path to the game and the path to your mod.
 
-2. provincenames.yml - A file with all of the province names for your mod
-
-3. provinces.png - Your mod's main province image file
-
-4. Add the themes directory and all the files in it if you want to use some of the custom themes. Without these the gold, red, orange, and purple color schemes will not load.
-
-In addition to these files you will also need to set all of the Application Settings that are listed below in the settings.json file to the correct values for your mod.
+2. provincenames.yml - A file with all of the province names for your mod. Copy the exact structure of the existing file and fill it with your data.
 
 # How to Use
 
@@ -35,6 +35,7 @@ In addition to these files you will also need to set all of the Application Sett
 # Settings
 
 There are several settings that allow you to change the appearance of the application.
+
 All of the UI settings can be changed with a settings window that is opened with a button in the topbar.
 
 UI settings
@@ -49,22 +50,16 @@ UI settings
 5. Menu Style
 
 Application Settings
-All of these need to be set to the correct values for the mod you are working on or the application will not function correctly as it will not have the data it needs.
 
-1. Pop Types
+All of these need to be set to the correct values or the application will not function correctly as it will not have the data it needs.
 
-2. Terrain Types
+1. path_to_base_game - This should be the path to the Imperator Rome game folder.
 
-3. Cultures
+2. path_to_mod - This should be the path to your mod.
 
-4. Religions
-
-5. Province Ranks
-
-6. Trade Goods
-
-7. Buildings
 
 ![Screenshot](/assets/image1.png)
 
 ![Screenshot 2](/assets/image2.png)
+
+![Screenshot 3](/assets/image3.png)

@@ -4,7 +4,9 @@ import json
 class Settings:
     def __init__(self):
         # Application Settings
-        self.path_to_province_setup = ""
+        self.using_base_game_province_definitions = False
+        self.path_to_base_game = ""
+        self.path_to_mod = ""
         self.theme = ""
         self.color_scheme = ""
         self.ui_scaling = ""
@@ -24,19 +26,16 @@ class Settings:
         with open("settings.json", "w") as f:
             f.write("")
             f.write("{\n\t")
-            f.write(f'"path_to_province_setup": "{self.path_to_province_setup}",\n\t')
+            base_game_path = self.path_to_base_game.replace("\\", "/")
+            mod_path = self.path_to_mod.replace("\\", "/")
+            f.write(f'"path_to_base_game": "{base_game_path}",\n\t')
+            f.write(f'"path_to_mod": "{mod_path}",\n\t')
             f.write(f'"theme": "{self.theme}",\n\t')
             f.write(f'"color_scheme": "{self.color_scheme}",\n\t')
             f.write(f'"ui_scaling": "{self.ui_scaling}",\n\t')
             f.write(f'"layout": "{self.layout}",\n\t')
-            f.write(f'"menu_style": "{self.menu_style}",\n')
-            self.write_json_list(f, "pop_types", self.pop_types)
-            self.write_json_list(f, "terrain_types", self.terrain_types)
-            self.write_json_list(f, "cultures", self.cultures)
-            self.write_json_list(f, "religions", self.religions)
-            self.write_json_list(f, "province_ranks", self.province_ranks)
-            self.write_json_list(f, "trade_goods", self.trade_goods)
-            self.write_json_list(f, "buildings", self.buildings, end=True)
+            f.write(f'"menu_style": "{self.menu_style}",\n\t')
+            f.write(f'"using_base_game_province_definitions": {str(self.using_base_game_province_definitions).lower()}\n')
             f.write("}")
 
     def load(self):
@@ -45,21 +44,25 @@ class Settings:
             settings = json.load(f)
 
         # Application Settings
-        self.path_to_province_setup = settings["path_to_province_setup"]
+        self.using_base_game_province_definitions = settings["using_base_game_province_definitions"]
+        self.path_to_base_game = settings["path_to_base_game"].replace("/", "\\")
+        self.path_to_mod = settings["path_to_mod"].replace("/", "\\")
         self.theme = settings["theme"]
         self.layout = settings["layout"]
         self.color_scheme = settings["color_scheme"]
         self.menu_style = settings["menu_style"]
         self.ui_scaling = settings["ui_scaling"]
 
-        # Data Settings
-        self.pop_types = settings["pop_types"]
-        self.terrain_types = settings["terrain_types"]
-        self.cultures = settings["cultures"]
-        self.religions = settings["religions"]
-        self.province_ranks = settings["province_ranks"]
-        self.trade_goods = settings["trade_goods"]
-        self.buildings = settings["buildings"]
+        if self.using_base_game_province_definitions:
+            self.definition_csv = self.path_to_base_game + "\\map_data\\definition.csv"
+        else:
+            self.definition_csv = self.path_to_mod + "\\map_data\\definition.csv"
+
+        if self.using_base_game_province_definitions:
+            self.province_png = self.path_to_base_game + "\\map_data\\provinces.png"
+        else:
+            self.province_png = self.path_to_mod + "\\map_data\\provinces.png"
+
 
     def write_json_list(self, f, name, li, end=False):
         """
