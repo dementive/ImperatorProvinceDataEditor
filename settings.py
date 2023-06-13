@@ -7,6 +7,7 @@ class Settings:
         self.using_base_game_province_definitions = False
         self.path_to_base_game = ""
         self.path_to_mod = ""
+        self.custom_maps = list()
         self.theme = ""
         self.color_scheme = ""
         self.ui_scaling = ""
@@ -29,8 +30,9 @@ class Settings:
             base_game_path = self.path_to_base_game.replace("\\", "/")
             mod_path = self.path_to_mod.replace("\\", "/")
             f.write(f'"path_to_base_game": "{base_game_path}",\n\t')
-            f.write(f'"path_to_mod": "{mod_path}",\n\t')
-            f.write(f'"theme": "{self.theme}",\n\t')
+            f.write(f'"path_to_mod": "{mod_path}",\n')
+            self.write_json_list(f, "custom_maps", self.custom_maps)
+            f.write(f'\t"theme": "{self.theme}",\n\t')
             f.write(f'"color_scheme": "{self.color_scheme}",\n\t')
             f.write(f'"ui_scaling": "{self.ui_scaling}",\n\t')
             f.write(f'"layout": "{self.layout}",\n\t')
@@ -47,6 +49,7 @@ class Settings:
         self.using_base_game_province_definitions = settings["using_base_game_province_definitions"]
         self.path_to_base_game = settings["path_to_base_game"].replace("/", "\\")
         self.path_to_mod = settings["path_to_mod"].replace("/", "\\")
+        self.custom_maps = settings["custom_maps"]
         self.theme = settings["theme"]
         self.layout = settings["layout"]
         self.color_scheme = settings["color_scheme"]

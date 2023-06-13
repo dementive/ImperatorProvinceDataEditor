@@ -20,17 +20,19 @@ If you are setting the app up for the first time you will need to change a few f
 
 2. provincenames.yml - A file with all of the province names for your mod. Copy the exact structure of the existing file and fill it with your data.
 
-# How to Use
+# Features
 
-1. Complete all the setup, make sure all of your mod's data is added correctly.
+1. There is a zoom area with the provinces.png in it that can be zoomed into and moved around. There is also a frame on the side of the screen that has all the province data in it, here you can edit any data associated with the province and add new pops to the province.
 
-2. Open the Application.
+2. Right-clicking any province on the province map will load all of it's information into the province data frame. When a province is right-clicked, if any province data has been changed, a save is triggered that will automatically rewrite all the data that was in the original file the province was found in.
 
-3. There is a zoom area with the provinces.png in it that can be zoomed into and moved around. There is also a frame on the side of the screen that has all the province data in it, here you can edit any data associated with the province and add new pops to the province.
+3. Alt/Ctrl/Shift-clicking on a province will show a tooltip that displays it's ID and name.
 
-4. Right-clicking any province on the province map will load all of it's information into the province data frame. When a province is right-clicked, if any province data has been changed, a save is triggered that will automatically rewrite all the data that was in the original file the province was found in.
+4. The main map canvas can be changed to use custom maps defined in settings or loaded at runtime in the Map Modes menu. 
 
-5. Exiting the application will automatically save all changes made to any provinces that have been changed.
+7. There is a simple search function that will let you set the current province data to a specific province ID.
+
+8. Exiting the application or switching between provinces will automatically save all changes.
 
 # Settings
 
@@ -53,10 +55,11 @@ Application Settings
 
 All of these need to be set to the correct values or the application will not function correctly as it will not have the data it needs.
 
-1. path_to_base_game - This should be the path to the Imperator Rome game folder.
+1. path_to_base_game - This should be the path to the Imperator Rome game folder. If you do not want to load any data from the base game set this to an empty string.
 
 2. path_to_mod - This should be the path to your mod.
 
+3. custom_maps - This is a list of paths to custom maps to load into the program. All entries in this list will automatically get a button to be opened in the map modes menu. Custom maps can be any image but are easiest to get by using the `printmap <map_mode>` console command in game.
 
 ![Screenshot](/assets/image1.png)
 

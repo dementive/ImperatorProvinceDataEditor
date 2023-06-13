@@ -5,6 +5,7 @@ import math
 import re
 import warnings
 import threading
+from tkinter import filedialog
 from platform import system
 from pathlib import Path
 from PIL import Image, ImageTk, ImageGrab, ImageFile
@@ -28,40 +29,48 @@ changed_provinces_data = dict()
 
 # Classes from sublime imperator plugin
 
+
 class ImperatorBuilding(GameObjectBase):
     def __init__(self):
         super().__init__([settings.path_to_mod], settings.path_to_base_game)
         self.get_data("common\\buildings")
 
+
 class ImperatorCulture(GameObjectBase):
     def __init__(self):
-        super().__init__([settings.path_to_mod], settings.path_to_base_game,level=2)
+        super().__init__([settings.path_to_mod], settings.path_to_base_game, level=2)
         self.get_data("common\\cultures")
+
 
 class ImperatorPop(GameObjectBase):
     def __init__(self):
         super().__init__([settings.path_to_mod], settings.path_to_base_game)
         self.get_data("common\\pop_types")
 
+
 class ImperatorProvinceRank(GameObjectBase):
     def __init__(self):
         super().__init__([settings.path_to_mod], settings.path_to_base_game)
         self.get_data("common\\province_ranks")
+
 
 class ImperatorReligion(GameObjectBase):
     def __init__(self):
         super().__init__([settings.path_to_mod], settings.path_to_base_game)
         self.get_data("common\\religions")
 
+
 class ImperatorTerrain(GameObjectBase):
     def __init__(self):
         super().__init__([settings.path_to_mod], settings.path_to_base_game)
         self.get_data("common\\terrain_types")
 
+
 class ImperatorTradeGood(GameObjectBase):
     def __init__(self):
         super().__init__([settings.path_to_mod], settings.path_to_base_game)
         self.get_data("common\\trade_goods")
+
 
 # Non-GUI code
 
@@ -172,6 +181,7 @@ class ProvinceDefinition:
         self.id = pid
         self.rgb = (r, g, b)
 
+
 def fix_definition_csv():
     # skip first 2 lines because they break pandas.read_csv
     first_id = ""
@@ -185,6 +195,7 @@ def fix_definition_csv():
             content.append(line)
 
     return first_id
+
 
 def load_definitions():
     first_id = fix_definition_csv()
@@ -408,28 +419,7 @@ def save_all_changes():
                     file.write(get_province_output(province_data))
 
 
-# GUI code
-
-
-def province_map_click_callback(event):
-    global application, changed_provinces_data
-
-    x, y = event.x_root, event.y_root
-    image = ImageGrab.grab((x, y, x + 1, y + 1))
-    color = image.getpixel((0, 0))
-
-    province_id = 0
-    if color not in province_definitions[1]:
-        return
-
-    idx = province_definitions[1].index(color)
-    province_id = province_definitions[0][idx].id
-    
-    # Save all of the data from the current province into the main data frame
-    save_all_changes()
-
-    # Recreate the province data frame with the data from the clicked province
-
+def set_province_dataframe_from_id(province_id):
     if province_id in changed_provinces:
         new_province_data = changed_provinces_data[province_id]
     else:
@@ -482,6 +472,11 @@ def province_map_click_callback(event):
     application.province_data_frame.province_rank_box.set(application.province_data_frame.province_rank.get())
 
     application.province_data_frame.civ_value_slider.set(application.province_data_frame.civ_value.get())
+
+    application.province_data_frame.civ_value_label.configure(
+        text=f"Civilization Value: {application.province_data_frame.civ_value.get()}",
+    )
+
     application.province_data_frame.holy_site_entry.delete("0", tk.END)
     application.province_data_frame.holy_site_entry.insert(
         -1, application.province_data_frame.holy_site.get()
@@ -504,6 +499,33 @@ def province_map_click_callback(event):
         application.province_data_frame.create_pop(i[0], i[1][2][1], i[1][0][1], i[1][1][1])
 
     application.province_data_frame.startup_complete = True
+
+
+# GUI code
+
+
+def province_map_click_callback(event):
+    global application, changed_provinces_data
+
+    if application.province_map is False:
+        return
+
+    x, y = event.x_root, event.y_root
+    image = ImageGrab.grab((x, y, x + 1, y + 1))
+    color = image.getpixel((0, 0))
+
+    province_id = 0
+    if color not in province_definitions[1]:
+        return
+
+    idx = province_definitions[1].index(color)
+    province_id = province_definitions[0][idx].id
+
+    # Save all of the data from the current province into the main data frame
+    save_all_changes()
+
+    # Recreate the province data frame with the data from the clicked province
+    set_province_dataframe_from_id(province_id)
 
 
 class AutoScrollbar(customtkinter.CTkScrollbar):
@@ -529,13 +551,13 @@ class ZoomArea:
     Entirely based on https://github.com/foobar167/junkyard/blob/master/zoom_advanced3.py but updated to use customtkinter widgets
     """
 
-    def __init__(self, placeholder, path):
+    def __init__(self, placeholder):
         """Initialize the ImageFrame"""
         self.imscale = 1.0  # scale for the canvas image zoom, public for outer classes
         self.__delta = 1.3  # zoom magnitude
         self.__filter = Image.NEAREST  # could be: NEAREST, BILINEAR, BICUBIC and ANTIALIAS
         self.__previous_state = 0  # previous state of the keyboard
-        self.path = path  # path to the image, should be public for outer classes
+        self.path = settings.province_png  # path to the image, should be public for outer classes
         # Create ImageFrame in placeholder widget
         self.__imframe = customtkinter.CTkFrame(placeholder)  # placeholder of the ImageFrame object
         # Vertical and horizontal scrollbars for canvas
@@ -605,7 +627,6 @@ class ZoomArea:
         self.__scale = self.imscale * self.__ratio  # image pyramide scale
         self.__reduction = 2  # reduction degree of image pyramid
         (w, h), m, j = self.__pyramid[-1].size, 512, 0
-        n = math.ceil(math.log(min(w, h) / m, self.__reduction)) + 1  # image pyramid length
         while w > m and h > m:  # top pyramid image is around 512 pixels in size
             j += 1
             w /= self.__reduction  # divide on reduction degree
@@ -615,10 +636,58 @@ class ZoomArea:
         self.container = self.canvas.create_rectangle((0, 0, self.imwidth, self.imheight), width=0)
         self.__show_image()  # show image on the canvas
         self.canvas.focus_set()  # set focus on the canvas
+        self.canvas.bind("<Control-Button-1>", self.create_tooltip)
+        self.canvas.bind("<Shift-Button-1>", self.create_tooltip)
+        self.canvas.bind("<Alt-Button-1>", self.create_tooltip)
+        self.canvas.bind("<Control-Button-3>", self.create_tooltip)
+        self.canvas.bind("<Shift-Button-3>", self.create_tooltip)
+        self.canvas.bind("<Alt-Button-3>", self.create_tooltip)
         self.canvas.bind("<Button-3>", province_map_click_callback)
+        self.tooltip = ""
+
+    def create_tooltip(self, event):
+        if application.province_map is False:
+            return
+
+        if self.tooltip:
+            self.tooltip.destroy()
+            self.tooltip = ""
+            return
+
+        x, y = event.x_root, event.y_root
+        image = ImageGrab.grab((x, y, x + 1, y + 1))
+        color = image.getpixel((0, 0))
+
+        province_id = 0
+        if color not in province_definitions[1]:
+            return
+
+        idx = province_definitions[1].index(color)
+        province_id = province_definitions[0][idx].id
+        
+        try:
+            province_name = application.province_data_frame.province_names[province_id]
+        except KeyError:
+            province_name = ""
+
+        if province_name:
+            province_name = "\nName: " + province_name
+
+        # Add tooltip
+        self.tooltip_text = tk.StringVar()
+        if customtkinter.get_appearance_mode() == "Dark":
+            self.tooltip = tk.Label(self.__imframe, textvariable=self.tooltip_text, bg="#1c1c1c", fg="#ffffff", padx=5, pady=5)
+        else:
+            self.tooltip = tk.Label(self.__imframe, textvariable=self.tooltip_text, bg="#ffffff", fg="#1c1c1c", padx=5, pady=5)
+        self.tooltip.config(relief=tk.RAISED, bd=1, font=("Arial", 10))
+        self.tooltip_text.set(f"Province ID: {province_id}{province_name}")
+        self.tooltip.place(x=event.x_root - 20, y=event.y_root - 80)
 
     def smaller(self):
         """Resize image proportionally and return smaller image"""
+        if self.tooltip:
+            self.tooltip.destroy()
+            self.tooltip = ""
         w1, h1 = float(self.imwidth), float(self.imheight)
         w2, h2 = float(self.__huge_size), float(self.__huge_size)
         aspect_ratio1 = w1 / h1
@@ -672,12 +741,18 @@ class ZoomArea:
     # noinspection PyUnusedLocal
     def __scroll_x(self, *args, **kwargs):
         """Scroll canvas horizontally and redraw the image"""
+        if self.tooltip:
+            self.tooltip.destroy()
+            self.tooltip = ""
         self.canvas.xview(*args)  # scroll horizontally
         self.__show_image()  # redraw the image
 
     # noinspection PyUnusedLocal
     def __scroll_y(self, *args, **kwargs):
         """Scroll canvas vertically and redraw the image"""
+        if self.tooltip:
+            self.tooltip.destroy()
+            self.tooltip = ""
         self.canvas.yview(*args)  # scroll vertically
         self.__show_image()  # redraw the image
 
@@ -748,6 +823,9 @@ class ZoomArea:
 
     def __move_to(self, event):
         """Drag (move) canvas to the new position"""
+        if self.tooltip:
+            self.tooltip.destroy()
+            self.tooltip = ""
         self.canvas.scan_dragto(event.x, event.y, gain=1)
         self.__show_image()  # zoom tile and show it on the canvas
 
@@ -761,6 +839,9 @@ class ZoomArea:
 
     def __wheel(self, event):
         """Zoom with mouse wheel"""
+        if self.tooltip:
+            self.tooltip.destroy()
+            self.tooltip = ""
         x = self.canvas.canvasx(event.x)  # get coordinates of the event on the canvas
         y = self.canvas.canvasy(event.y)
         if self.outside(x, y):
@@ -804,6 +885,9 @@ class ZoomArea:
     def __keystroke(self, event):
         """Scrolling with the keyboard.
         Independent from the language of the keyboard, CapsLock, <Ctrl>+<key>, etc."""
+        if self.tooltip:
+            self.tooltip.destroy()
+            self.tooltip = ""
         if event.state - self.__previous_state == 4:  # means that the Control key is pressed
             pass  # do nothing if Control key is pressed
         else:
@@ -845,12 +929,12 @@ class ZoomArea:
 class ProvinceMap(tk.Frame):
     """Zoomable image class"""
 
-    def __init__(self, mainframe, path):
+    def __init__(self, mainframe):
         """Initialize the main Frame"""
         tk.Frame.__init__(self, master=mainframe)
         self.master.rowconfigure(0, weight=1)  # make the ZoomArea widget expandable
         self.master.columnconfigure(0, weight=1)
-        canvas = ZoomArea(self.master, path)  # create widget
+        canvas = ZoomArea(self.master)  # create widget
         canvas.grid(row=0, column=0)  # show widget
 
 
@@ -1946,9 +2030,76 @@ class SettingsWindow(customtkinter.CTkToplevel):
         self.destroy()
 
 
+class SearchWindow(customtkinter.CTkToplevel):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.title("Search")
+        self.geometry("250x150")
+
+        self.province_id = tk.StringVar(value="1")
+
+        self.rowconfigure(0, weight=1)
+        self.rowconfigure(1, weight=0)
+        self.columnconfigure(0, weight=1)
+
+        # Province ID editbox
+        self.province_id_entry_label = customtkinter.CTkLabel(
+            self,
+            text="Province ID",
+            font=customtkinter.CTkFont(size=14, weight="bold"),
+        )
+        self.province_id_entry_label.grid(row=0, column=0, padx=(0, 0), pady=(10, 60))
+        self.province_id_entry = customtkinter.CTkEntry(
+            self,
+            placeholder_text="1",
+            textvariable=self.province_id,
+            width=180,
+            justify="left",
+        )
+        self.province_id_entry.grid(row=0, column=0, padx=0, pady=(5, 0))
+
+        # Confirmation button
+        self.confirm_button = customtkinter.CTkButton(
+            self,
+            width=180,
+            text="Confirm",
+            command=self.confirm_callback,
+            fg_color="transparent",
+            border_width=2,
+            text_color=("gray10", "#DCE4EE"),
+        )
+        self.confirm_button.grid(column=0, row=1, padx=0, pady=(0, 10))
+        self.tooltip_2 = CTkToolTip(
+            self.confirm_button,
+            delay=0.5,
+            message=f"Set Current province data to {self.province_id.get()}",
+            alpha=0.925,
+            border_color="#DCE4EE",
+        )
+
+        self.province_id_entry.bind("<Return>", self.province_id_callback)
+
+    def province_id_callback(self, event):
+        self.confirm_callback()
+
+    def confirm_callback(self):
+        province_id = str(self.province_id.get())
+
+        # Save all of the data from the current province into the main data frame
+        save_all_changes()
+
+        # Recreate the province data frame with the data from the clicked province
+        set_province_dataframe_from_id(province_id)
+
+        self.destroy()
+
+
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
+
+        self.province_map = True
 
         # Configure window
         self.title("Imperator Province Data Editor")
@@ -1980,21 +2131,48 @@ class App(customtkinter.CTk):
 
         # Create province map
         self.province_frame = customtkinter.CTkFrame(self, height=1000)
-        ProvinceMap(self.province_frame, path=settings.province_png)
+        ProvinceMap(self.province_frame)
         self.province_frame.grid(row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew")
         self.grid_propagate(False)
 
         # Create menu
         if OS == "Windows" and settings.menu_style == "titlebar":
-            self.menu = CTkTitleMenu(self, x_offset=self.winfo_width() + 10)
+            self.menu = CTkTitleMenu(self, x_offset=self.winfo_width() + 9)
         else:
             self.menu = CTkMenuBar(self)
 
-        button_1 = self.menu.add_cascade("Settings")
+        map_button = self.menu.add_cascade("Map Modes")
+        search_button = self.menu.add_cascade("Search")
+        settings_button = self.menu.add_cascade("Settings")
 
         self.settings = None
-        self.dropdown = CustomDropdownMenu(widget=button_1)
-        self.dropdown.add_option(
+        self.search = None
+        self.map_dropdown = CustomDropdownMenu(widget=map_button)
+        self.search_dropdown = CustomDropdownMenu(widget=search_button)
+        self.settings_dropdown = CustomDropdownMenu(widget=settings_button)
+
+        for i in settings.custom_maps:
+            self.map_dropdown.add_option(
+                option=Path(i).stem.title(),
+                command=self.load_map_wrapper(i),
+            )
+
+        self.map_dropdown.add_option(
+            option="Reload Province Map",
+            command=lambda: self.reload_map(),
+        )
+        self.map_dropdown.add_separator()
+        self.map_dropdown.add_option(
+            option="Change Map",
+            command=lambda: self.change_map(),
+        )
+
+        self.search_dropdown.add_option(
+            option="Open Province Search",
+            command=lambda: self.open_search(),
+        )
+
+        self.settings_dropdown.add_option(
             option="Open Settings",
             command=lambda: self.open_settings(),
         )
@@ -2004,6 +2182,55 @@ class App(customtkinter.CTk):
             self.settings = SettingsWindow(self)
         else:
             self.settings.focus()
+
+    def open_search(self):
+        if self.search is None or not self.search.winfo_exists():
+            self.search = SearchWindow(self)
+        else:
+            self.search.focus()
+
+    def change_map(self):
+        new_map = filedialog.askopenfilename()
+        if not new_map:
+            return
+        settings.province_png = new_map
+        self.grid_propagate(True)
+        self.province_frame.destroy()
+        self.province_frame = customtkinter.CTkFrame(self, height=1000)
+        ProvinceMap(self.province_frame)
+        self.province_frame.grid(row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew")
+        self.grid_propagate(False)
+        self.province_map = False
+
+    def reload_map(self):
+        if settings.using_base_game_province_definitions:
+            settings.province_png = settings.path_to_base_game + "\\map_data\\provinces.png"
+        else:
+            settings.province_png = settings.path_to_mod + "\\map_data\\provinces.png"
+        self.grid_propagate(True)
+        self.province_frame.destroy()
+        self.province_frame = customtkinter.CTkFrame(self, height=1000)
+        ProvinceMap(self.province_frame)
+        self.province_frame.grid(row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew")
+        self.grid_propagate(False)
+        self.province_map = True
+
+    def load_map(self, map_to_load):
+        settings.province_png = map_to_load
+        self.grid_propagate(True)
+        self.province_frame.destroy()
+        self.province_frame = customtkinter.CTkFrame(self, height=1000)
+        ProvinceMap(self.province_frame)
+        self.province_frame.grid(row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew")
+        self.grid_propagate(False)
+        self.province_map = False
+
+    def load_map_wrapper(self, i):
+        # Needs a wrapper function because lambda in for loops always uses the last value
+        def load_map_callback():
+            return self.load_map(i)
+
+        return load_map_callback
 
     def on_close(self):
         # Save all the changes made to provinces and localization
@@ -2036,8 +2263,8 @@ class App(customtkinter.CTk):
 
         application.destroy()
 
-def add_game_objects_to_settings():
 
+def add_game_objects_to_settings():
     def load_first():
         buildings = ImperatorBuilding()
         settings.buildings = [x.key for x in buildings]
@@ -2066,13 +2293,14 @@ def add_game_objects_to_settings():
         trade_goods = ImperatorTradeGood()
         settings.trade_goods = [x.key for x in trade_goods]
 
-    thread1 = threading.Thread(target=load_first);
+    thread1 = threading.Thread(target=load_first)
     thread2 = threading.Thread(target=load_second)
 
     thread1.start()
     thread2.start()
     thread1.join()
     thread2.join()
+
 
 if __name__ == "__main__":
     global all_province_data, application
@@ -2103,7 +2331,6 @@ if __name__ == "__main__":
             for i in data:
                 parsed_data = parse_province_data(i)
                 all_province_data[parsed_data[0][1]] = parsed_data
-                #all_province_data.append(parsed_data)
                 id_to_file_dict[parsed_data[0][1]] = filename.name
     except:
         error = (

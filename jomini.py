@@ -230,15 +230,16 @@ class GameObjectBase:
 	# Class Functions needed to initialize data, don't need to be use anything below this after initilization of class
 	def get_data(self, objpath: str) -> None:
 		# Fill collections with vanilla data
-		for dirpath, dirnames, filenames in os.walk(self.vanilla_path):
-			if objpath in dirpath:
-				self.main += self.get_pdx_object_list(dirpath)
-		self.remove(" ")
+		if self.vanilla_path:
+			for dirpath, dirnames, filenames in os.walk(self.vanilla_path):
+				if objpath in dirpath:
+					self.main += self.get_pdx_object_list(dirpath)
 		# Fill collections with mod data
 		for path in self.paths:
 			for dirpath, dirnames, filenames in os.walk(path):
 				if objpath in dirpath:
 					self.main += self.get_pdx_object_list(dirpath)
+		self.remove(" ")
 
 		# Remove vanilla objects when mod file overrides vanilla file but the mod file doens't include that object
 		vanilla_files = set()
