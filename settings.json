@@ -1,12 +1,7 @@
 {
 	"path_to_base_game": "C:/Program Files (x86)/Steam/steamapps/common/ImperatorRome/game",
 	"path_to_mod": "C:/Users/demen/Documents/Paradox Interactive/Imperator/mod/Terra-Indomita",
-	"custom_maps": [
-		"maps/culture.png",
-		"maps/political.png",
-		"maps/population.png",
-		"maps/religion.png"
-	],
+	"custom_maps": [],
 	"theme": "Dark",
 	"color_scheme": "dark-blue",
 	"ui_scaling": "100%",
