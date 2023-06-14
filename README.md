@@ -22,17 +22,19 @@ If you are setting the app up for the first time you will need to change a few f
 
 # Features
 
-1. There is a zoom area with the provinces.png in it that can be zoomed into and moved around. There is also a frame on the side of the screen that has all the province data in it, here you can edit any data associated with the province and add new pops to the province.
+1. There is a zoom area with the provinces.png in it that can be zoomed into and moved around, ctrl+mousewheel will double the speed of the zoom.
 
-2. Right-clicking any province on the province map will load all of it's information into the province data frame. When a province is right-clicked, if any province data has been changed, a save is triggered that will automatically rewrite all the data that was in the original file the province was found in.
+2. There is also a frame on the side of the screen that has all the province data in it, here you can edit any data associated with the province and add new pops to the province.
 
-3. Alt/Ctrl/Shift-clicking on a province will show a tooltip that displays it's ID and name.
+3. Right-clicking any province on the province map will load all of it's information into the province data frame. When a province is right-clicked, if any province data has been changed, a save is triggered that will automatically rewrite all the data that was in the original file the province was found in.
 
-4. The main map canvas can be changed to use custom maps defined in settings or loaded at runtime in the Map Modes menu. 
+4. Alt/Ctrl/Shift-clicking on a province will show a tooltip that displays it's ID and name.
 
-7. There is a simple search function that will let you set the current province data to a specific province ID.
+5. The main map canvas can be changed to use custom maps defined in settings or loaded at runtime in the Map Modes menu. Clicking on the menu button to load a new map mode will add it to the main canvas, right-clicking will load it into a canvas in a new window.
 
-8. Exiting the application or switching between provinces will automatically save all changes.
+6. There is a simple search function that will let you set the current province data to a specific province ID.
+
+7. Exiting the application or switching between provinces will automatically save all changes.
 
 # Settings
 
@@ -59,7 +61,10 @@ All of these need to be set to the correct values or the application will not fu
 
 2. path_to_mod - This should be the path to your mod.
 
-3. custom_maps - This is a list of paths to custom maps to load into the program. All entries in this list will automatically get a button to be opened in the map modes menu. Custom maps can be any image but are easiest to get by using the `printmap <map_mode>` console command in game.
+3. custom_maps - This is a list of paths to files or directories that have custom maps to load into the program. All entries in this list will automatically get a button to be opened in the map modes menu. Custom maps can be any image. I recommend using the following GUI command in game to quickly run all the console commands needed to print the needed maps:
+```
+onclick = "[ExecuteConsoleCommandsForced('printmap political;printmap culture;printmap religion;printmap simple_terrain;printmap population;printmap fortifications;printmap civilization')]"
+```
 
 ![Screenshot](/assets/image1.png)
 

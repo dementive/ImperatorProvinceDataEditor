@@ -1,4 +1,6 @@
 import json
+from pathlib import Path
+from PIL import Image
 
 
 class Settings:
@@ -37,7 +39,9 @@ class Settings:
             f.write(f'"ui_scaling": "{self.ui_scaling}",\n\t')
             f.write(f'"layout": "{self.layout}",\n\t')
             f.write(f'"menu_style": "{self.menu_style}",\n\t')
-            f.write(f'"using_base_game_province_definitions": {str(self.using_base_game_province_definitions).lower()}\n')
+            f.write(
+                f'"using_base_game_province_definitions": {str(self.using_base_game_province_definitions).lower()}\n'
+            )
             f.write("}")
 
     def load(self):
@@ -49,7 +53,18 @@ class Settings:
         self.using_base_game_province_definitions = settings["using_base_game_province_definitions"]
         self.path_to_base_game = settings["path_to_base_game"].replace("/", "\\")
         self.path_to_mod = settings["path_to_mod"].replace("/", "\\")
-        self.custom_maps = settings["custom_maps"]
+        custom_maps = list()
+        for i in settings["custom_maps"]:
+            path = Path(i)
+            if path.is_dir():
+                pillow_images = find_pillow_images_in_directory(path)
+                for j in pillow_images:
+                    full_path = j.resolve()
+                    custom_maps.append(full_path)
+            else:
+                custom_maps.append(i)
+
+        self.custom_maps = custom_maps
         self.theme = settings["theme"]
         self.layout = settings["layout"]
         self.color_scheme = settings["color_scheme"]
@@ -65,7 +80,6 @@ class Settings:
             self.province_png = self.path_to_base_game + "\\map_data\\provinces.png"
         else:
             self.province_png = self.path_to_mod + "\\map_data\\provinces.png"
-
 
     def write_json_list(self, f, name, li, end=False):
         """
@@ -187,3 +201,15 @@ class Settings:
                     return 1
                 case "menubar":
                     return 2
+
+
+def is_pillow_image(file_path):
+    try:
+        Image.open(file_path)
+        return True
+    except IOError:
+        return False
+
+
+def find_pillow_images_in_directory(directory):
+    return [file_path for file_path in directory.iterdir() if is_pillow_image(file_path)]

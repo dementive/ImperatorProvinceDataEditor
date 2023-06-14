@@ -551,13 +551,13 @@ class ZoomArea:
     Entirely based on https://github.com/foobar167/junkyard/blob/master/zoom_advanced3.py but updated to use customtkinter widgets
     """
 
-    def __init__(self, placeholder):
+    def __init__(self, placeholder, image_path):
         """Initialize the ImageFrame"""
         self.imscale = 1.0  # scale for the canvas image zoom, public for outer classes
         self.__delta = 1.3  # zoom magnitude
         self.__filter = Image.NEAREST  # could be: NEAREST, BILINEAR, BICUBIC and ANTIALIAS
         self.__previous_state = 0  # previous state of the keyboard
-        self.path = settings.province_png  # path to the image, should be public for outer classes
+        self.path = image_path  # path to the image, should be public for outer classes
         # Create ImageFrame in placeholder widget
         self.__imframe = customtkinter.CTkFrame(placeholder)  # placeholder of the ImageFrame object
         # Vertical and horizontal scrollbars for canvas
@@ -592,6 +592,17 @@ class ZoomArea:
         self.canvas.bind("<MouseWheel>", self.__wheel)  # zoom for Windows and MacOS, but not Linux
         self.canvas.bind("<Button-5>", self.__wheel)  # zoom for Linux, wheel scroll down
         self.canvas.bind("<Button-4>", self.__wheel)  # zoom for Linux, wheel scroll up
+
+        self.canvas.bind("<Control-MouseWheel>", self.__fastwheel)
+        self.canvas.bind("<Control-Button-5>", self.__fastwheel)
+        self.canvas.bind("<Control-Button-4>", self.__fastwheel)
+        self.canvas.bind("<Shift-MouseWheel>", self.__fastwheel)
+        self.canvas.bind("<Shift-Button-5>", self.__fastwheel)
+        self.canvas.bind("<Shift-Button-4>", self.__fastwheel)
+        self.canvas.bind("<Alt-MouseWheel>", self.__fastwheel)
+        self.canvas.bind("<Alt-Button-5>", self.__fastwheel)
+        self.canvas.bind("<Alt-Button-4>", self.__fastwheel)
+
         # Handle keystrokes in idle mode, because program slows down on a weak computers,
         # when too many key stroke events in the same time
         self.canvas.bind("<Key>", lambda event: self.canvas.after_idle(self.__keystroke, event))
@@ -664,7 +675,7 @@ class ZoomArea:
 
         idx = province_definitions[1].index(color)
         province_id = province_definitions[0][idx].id
-        
+
         try:
             province_name = application.province_data_frame.province_names[province_id]
         except KeyError:
@@ -676,9 +687,13 @@ class ZoomArea:
         # Add tooltip
         self.tooltip_text = tk.StringVar()
         if customtkinter.get_appearance_mode() == "Dark":
-            self.tooltip = tk.Label(self.__imframe, textvariable=self.tooltip_text, bg="#1c1c1c", fg="#ffffff", padx=5, pady=5)
+            self.tooltip = tk.Label(
+                self.__imframe, textvariable=self.tooltip_text, bg="#1c1c1c", fg="#ffffff", padx=5, pady=5
+            )
         else:
-            self.tooltip = tk.Label(self.__imframe, textvariable=self.tooltip_text, bg="#ffffff", fg="#1c1c1c", padx=5, pady=5)
+            self.tooltip = tk.Label(
+                self.__imframe, textvariable=self.tooltip_text, bg="#ffffff", fg="#1c1c1c", padx=5, pady=5
+            )
         self.tooltip.config(relief=tk.RAISED, bd=1, font=("Arial", 10))
         self.tooltip_text.set(f"Province ID: {province_id}{province_name}")
         self.tooltip.place(x=event.x_root - 20, y=event.y_root - 80)
@@ -839,6 +854,52 @@ class ZoomArea:
 
     def __wheel(self, event):
         """Zoom with mouse wheel"""
+        self.__delta = 1.3
+        if self.tooltip:
+            self.tooltip.destroy()
+            self.tooltip = ""
+        x = self.canvas.canvasx(event.x)  # get coordinates of the event on the canvas
+        y = self.canvas.canvasy(event.y)
+        if self.outside(x, y):
+            return  # zoom only inside image area
+        scale = 1.0
+        if OS == "Darwin":
+            if event.delta < 0:  # scroll down, zoom out, smaller
+                if round(self.__min_side * self.imscale) < 30:
+                    return  # image is less than 30 pixels
+                self.imscale /= self.__delta
+                scale /= self.__delta
+            if event.delta > 0:  # scroll up, zoom in, bigger
+                i = float(min(self.canvas.winfo_width(), self.canvas.winfo_height()) >> 1)
+                if i < self.imscale:
+                    return  # 1 pixel is bigger than the visible area
+                self.imscale *= self.__delta
+                scale *= self.__delta
+        else:
+            # Respond to Linux (event.num) or Windows (event.delta) wheel event
+            if event.num == 5 or event.delta == -120:  # scroll down, zoom out, smaller
+                if round(self.__min_side * self.imscale) < 30:
+                    return  # image is less than 30 pixels
+                self.imscale /= self.__delta
+                scale /= self.__delta
+            if event.num == 4 or event.delta == 120:  # scroll up, zoom in, bigger
+                i = float(min(self.canvas.winfo_width(), self.canvas.winfo_height()) >> 1)
+                if i < self.imscale:
+                    return  # 1 pixel is bigger than the visible area
+                self.imscale *= self.__delta
+                scale *= self.__delta
+        # Take appropriate image from the pyramid
+        k = self.imscale * self.__ratio  # temporary coefficient
+        self.__curr_img = min((-1) * int(math.log(k, self.__reduction)), len(self.__pyramid) - 1)
+        self.__scale = k * math.pow(self.__reduction, max(0, self.__curr_img))
+        #
+        self.canvas.scale("all", x, y, scale, scale)  # rescale all objects
+        # Redraw some figures before showing image on the screen
+        self.redraw_figures()  # method for child classes
+        self.__show_image()
+
+    def __fastwheel(self, event):
+        self.__delta = 2.3
         if self.tooltip:
             self.tooltip.destroy()
             self.tooltip = ""
@@ -929,12 +990,12 @@ class ZoomArea:
 class ProvinceMap(tk.Frame):
     """Zoomable image class"""
 
-    def __init__(self, mainframe):
+    def __init__(self, mainframe, image_path):
         """Initialize the main Frame"""
         tk.Frame.__init__(self, master=mainframe)
         self.master.rowconfigure(0, weight=1)  # make the ZoomArea widget expandable
         self.master.columnconfigure(0, weight=1)
-        canvas = ZoomArea(self.master)  # create widget
+        canvas = ZoomArea(self.master, image_path)  # create widget
         canvas.grid(row=0, column=0)  # show widget
 
 
@@ -1106,7 +1167,7 @@ class AddBuildingsFrame(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         color = "#D3D3D3" if settings.theme == "Light" else "#1a1a1a"
         super().__init__(master, fg_color=color, **kwargs)
-        self.building_type = tk.StringVar(value="port_building")
+        self.building_type = tk.StringVar(value="fortress_building")
         self.building_count = 1
 
         # Culture combobox
@@ -1148,7 +1209,7 @@ class AddBuildingsFrame(customtkinter.CTkFrame):
             border_width=2,
             text_color=("gray10", "#DCE4EE"),
         )
-        self.confirm_button.grid(row=2, column=0, padx=(4, 0), pady=(10, 5))
+        self.confirm_button.grid(row=2, column=0, padx=(4, 0), pady=(10, 10))
         self.tooltip_2 = CTkToolTip(
             self.confirm_button,
             delay=0.5,
@@ -1388,7 +1449,7 @@ class ProvinceDataFrame(customtkinter.CTkScrollableFrame):
         self.civ_value = tk.IntVar(value=province_data["civilization_value"])
 
         self.current_open_buildings_row = 15
-        self.current_open_pops_row = 101
+        self.current_open_pops_row = 2001
 
         # Load province names localization
         self.province_names = get_province_names()
@@ -1601,8 +1662,7 @@ class ProvinceDataFrame(customtkinter.CTkScrollableFrame):
 
         # Create add buildings frame
         self.add_pops_frame = AddBuildingsFrame(self)
-        # This is placed on row 99, which is right before the first population widget.
-        self.add_pops_frame.grid(row=99, column=0, padx=(12, 9), pady=(4, 0))
+        self.add_pops_frame.grid(row=2000, column=0, padx=(12, 9), pady=(4, 10))
 
         # Population widgets
 
@@ -1621,7 +1681,7 @@ class ProvinceDataFrame(customtkinter.CTkScrollableFrame):
             text="Population",
             font=customtkinter.CTkFont(size=header_fontsize, weight="bold"),
         )
-        self.pops_label.grid(row=100, column=0, padx=(0, 0), pady=(10, 5))
+        self.pops_label.grid(row=9000, column=0, padx=(0, 0), pady=(10, 5))
 
         for i in self.pops:
             self.create_pop(i[0], i[1][2][1], i[1][0][1], i[1][1][1])
@@ -1629,7 +1689,7 @@ class ProvinceDataFrame(customtkinter.CTkScrollableFrame):
         # Create add pops frame
         self.add_pops_frame = AddPopsFrame(self)
         self.add_pops_frame.grid(
-            row=500, column=0, padx=(12, 9), pady=(4, 0)
+            row=9001, column=0, padx=(12, 9), pady=(4, 0)
         )  # Row is a big number so pop frames can be added
 
         # Place frame on grid
@@ -2095,6 +2155,29 @@ class SearchWindow(customtkinter.CTkToplevel):
         self.destroy()
 
 
+class CustomMapWindow(customtkinter.CTkToplevel):
+    def __init__(self, image_path, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.title(Path(image_path).name)
+        self.geometry(f"{1700}x{880}")
+
+        # Configure grid layout
+        self.grid_columnconfigure(1, weight=2)
+        self.grid_rowconfigure(0, weight=1)
+
+        # Create map
+        self.province_frame = customtkinter.CTkFrame(self, height=1000)
+        ProvinceMap(self.province_frame, image_path)
+        self.province_frame.grid(row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew")
+
+    def remake_map(self, new_map):
+        self.province_frame.destroy()
+        self.province_frame = customtkinter.CTkFrame(self, height=1000)
+        ProvinceMap(self.province_frame, new_map)
+        self.title(Path(new_map).name)
+        self.province_frame.grid(row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew")
+
+
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
@@ -2131,7 +2214,7 @@ class App(customtkinter.CTk):
 
         # Create province map
         self.province_frame = customtkinter.CTkFrame(self, height=1000)
-        ProvinceMap(self.province_frame)
+        ProvinceMap(self.province_frame, settings.province_png)
         self.province_frame.grid(row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew")
         self.grid_propagate(False)
 
@@ -2147,25 +2230,29 @@ class App(customtkinter.CTk):
 
         self.settings = None
         self.search = None
+        self.custom_map = None
+
         self.map_dropdown = CustomDropdownMenu(widget=map_button)
         self.search_dropdown = CustomDropdownMenu(widget=search_button)
         self.settings_dropdown = CustomDropdownMenu(widget=settings_button)
 
         for i in settings.custom_maps:
-            self.map_dropdown.add_option(
-                option=Path(i).stem.title(),
-                command=self.load_map_wrapper(i),
+            menu_button = self.map_dropdown.add_option(
+                option=Path(i).stem.title().replace("_", " "),
+                command=self.load_map_wrapper(i, "normal"),
             )
+            menu_button.bind("<Button-3>", self.load_map_wrapper(i, "new_window"))
 
         self.map_dropdown.add_option(
-            option="Reload Province Map",
+            option="Province Map",
             command=lambda: self.reload_map(),
         )
         self.map_dropdown.add_separator()
-        self.map_dropdown.add_option(
+        change_map_button = self.map_dropdown.add_option(
             option="Change Map",
-            command=lambda: self.change_map(),
+            command=self.change_map,
         )
+        change_map_button.bind("<Button-3>", self.open_map_in_new_window)
 
         self.search_dropdown.add_option(
             option="Open Province Search",
@@ -2190,45 +2277,61 @@ class App(customtkinter.CTk):
             self.search.focus()
 
     def change_map(self):
-        new_map = filedialog.askopenfilename()
-        if not new_map:
+        image_path = filedialog.askopenfilename()
+        if not image_path:
             return
-        settings.province_png = new_map
+
         self.grid_propagate(True)
         self.province_frame.destroy()
         self.province_frame = customtkinter.CTkFrame(self, height=1000)
-        ProvinceMap(self.province_frame)
+        ProvinceMap(self.province_frame, image_path)
         self.province_frame.grid(row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew")
         self.grid_propagate(False)
         self.province_map = False
 
-    def reload_map(self):
-        if settings.using_base_game_province_definitions:
-            settings.province_png = settings.path_to_base_game + "\\map_data\\provinces.png"
+    def open_map_in_new_window(self, event):
+        image_path = filedialog.askopenfilename()
+        if not image_path:
+            return
+
+        if self.custom_map is None or not self.custom_map.winfo_exists():
+            self.custom_map = CustomMapWindow(image_path, self)
         else:
-            settings.province_png = settings.path_to_mod + "\\map_data\\provinces.png"
+            self.custom_map.remake_map(image_path)
+            self.custom_map.focus()
+
+    def reload_map(self):
+        if self.province_map is True:
+            return
+
         self.grid_propagate(True)
         self.province_frame.destroy()
         self.province_frame = customtkinter.CTkFrame(self, height=1000)
-        ProvinceMap(self.province_frame)
+        ProvinceMap(self.province_frame, settings.province_png)
         self.province_frame.grid(row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew")
         self.grid_propagate(False)
         self.province_map = True
 
-    def load_map(self, map_to_load):
-        settings.province_png = map_to_load
-        self.grid_propagate(True)
-        self.province_frame.destroy()
-        self.province_frame = customtkinter.CTkFrame(self, height=1000)
-        ProvinceMap(self.province_frame)
-        self.province_frame.grid(row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew")
-        self.grid_propagate(False)
-        self.province_map = False
+    def load_map(self, map_to_load, mode):
+        if mode == "new_window":
+            if self.custom_map is None or not self.custom_map.winfo_exists():
+                self.custom_map = CustomMapWindow(map_to_load, self)
+            else:
+                self.custom_map.remake_map(map_to_load)
+                self.custom_map.focus()
+        else:
+            self.grid_propagate(True)
+            self.province_frame.destroy()
+            self.province_frame = customtkinter.CTkFrame(self, height=1000)
+            ProvinceMap(self.province_frame, map_to_load)
+            self.province_frame.grid(row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew")
+            self.grid_propagate(False)
+            self.province_map = False
 
-    def load_map_wrapper(self, i):
+    def load_map_wrapper(self, i, mode):
         # Needs a wrapper function because lambda in for loops always uses the last value
-        def load_map_callback():
-            return self.load_map(i)
+        def load_map_callback(event=""):
+            return self.load_map(i, mode)
 
         return load_map_callback
 
