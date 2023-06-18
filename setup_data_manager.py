@@ -72,6 +72,44 @@ class ImperatorTradeGood(GameObjectBase):
         self.get_data("common\\trade_goods")
 
 
+def add_game_objects_to_settings():
+    def load_first():
+        buildings = ImperatorBuilding()
+        settings.buildings = [x.key for x in buildings]
+        pop_types = ImperatorPop()
+        pop_types = [x.key for x in pop_types]
+        for i in pop_types:
+            if i == "nobles":
+                pop_types.remove(i)
+                pop_types.insert(0, i)
+            if i == "slaves":
+                pop_types.remove(i)
+                pop_types.append(i)
+
+        settings.pop_types = pop_types
+
+        province_ranks = ImperatorProvinceRank()
+        settings.province_ranks = [x.key for x in province_ranks]
+        religions = ImperatorReligion()
+        settings.religions = [x.key for x in religions]
+
+    def load_second():
+        cultures = ImperatorCulture()
+        settings.cultures = [x.key for x in cultures]
+        terrain_types = ImperatorTerrain()
+        settings.terrain_types = [x.key for x in terrain_types]
+        trade_goods = ImperatorTradeGood()
+        settings.trade_goods = [x.key for x in trade_goods]
+
+    thread1 = threading.Thread(target=load_first)
+    thread2 = threading.Thread(target=load_second)
+
+    thread1.start()
+    thread2.start()
+    thread1.join()
+    thread2.join()
+
+
 # Non-GUI code
 
 
@@ -2194,7 +2232,11 @@ class App(customtkinter.CTk):
         self.grid_rowconfigure((0, 1, 2), weight=1)
 
         # Create province data frame
-        current_data = all_province_data["1"]
+        try:
+            current_data = all_province_data["1"]
+        except KeyError:
+            first_key = next(iter(all_province_data))
+            current_data = all_province_data[first_key]
         pops, buildings = get_pops_and_buildings(current_data)
         province_data = ProvinceData(current_data)
 
@@ -2365,44 +2407,6 @@ class App(customtkinter.CTk):
             print(e)
 
         application.destroy()
-
-
-def add_game_objects_to_settings():
-    def load_first():
-        buildings = ImperatorBuilding()
-        settings.buildings = [x.key for x in buildings]
-        pop_types = ImperatorPop()
-        pop_types = [x.key for x in pop_types]
-        for i in pop_types:
-            if i == "nobles":
-                pop_types.remove(i)
-                pop_types.insert(0, i)
-            if i == "slaves":
-                pop_types.remove(i)
-                pop_types.append(i)
-
-        settings.pop_types = pop_types
-
-        province_ranks = ImperatorProvinceRank()
-        settings.province_ranks = [x.key for x in province_ranks]
-        religions = ImperatorReligion()
-        settings.religions = [x.key for x in religions]
-
-    def load_second():
-        cultures = ImperatorCulture()
-        settings.cultures = [x.key for x in cultures]
-        terrain_types = ImperatorTerrain()
-        settings.terrain_types = [x.key for x in terrain_types]
-        trade_goods = ImperatorTradeGood()
-        settings.trade_goods = [x.key for x in trade_goods]
-
-    thread1 = threading.Thread(target=load_first)
-    thread2 = threading.Thread(target=load_second)
-
-    thread1.start()
-    thread2.start()
-    thread1.join()
-    thread2.join()
 
 
 if __name__ == "__main__":
