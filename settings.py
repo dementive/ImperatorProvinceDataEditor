@@ -50,9 +50,11 @@ class Settings:
             settings = json.load(f)
 
         # Application Settings
-        self.using_base_game_province_definitions = settings["using_base_game_province_definitions"]
-        self.path_to_base_game = settings["path_to_base_game"].replace("/", "\\")
-        self.path_to_mod = settings["path_to_mod"].replace("/", "\\")
+        self.using_base_game_province_definitions = settings[
+            "using_base_game_province_definitions"
+        ]
+        self.path_to_base_game = settings["path_to_base_game"].replace("\\", "/")
+        self.path_to_mod = settings["path_to_mod"].replace("\\", "/")
         custom_maps = list()
         for i in settings["custom_maps"]:
             path = Path(i)
@@ -72,14 +74,14 @@ class Settings:
         self.ui_scaling = settings["ui_scaling"]
 
         if self.using_base_game_province_definitions:
-            self.definition_csv = self.path_to_base_game + "\\map_data\\definition.csv"
+            self.definition_csv = self.path_to_base_game + "/map_data/definition.csv"
         else:
-            self.definition_csv = self.path_to_mod + "\\map_data\\definition.csv"
+            self.definition_csv = self.path_to_mod + "/map_data/definition.csv"
 
         if self.using_base_game_province_definitions:
-            self.province_png = self.path_to_base_game + "\\map_data\\provinces.png"
+            self.province_png = self.path_to_base_game + "/map_data/provinces.png"
         else:
-            self.province_png = self.path_to_mod + "\\map_data\\provinces.png"
+            self.province_png = self.path_to_mod + "/map_data/provinces.png"
 
     def write_json_list(self, f, name, li, end=False):
         """
@@ -212,4 +214,6 @@ def is_pillow_image(file_path):
 
 
 def find_pillow_images_in_directory(directory):
-    return [file_path for file_path in directory.iterdir() if is_pillow_image(file_path)]
+    return [
+        file_path for file_path in directory.iterdir() if is_pillow_image(file_path)
+    ]

@@ -1,6 +1,6 @@
 {
-	"path_to_base_game": "C:/Program Files (x86)/Steam/steamapps/common/ImperatorRome/game",
-	"path_to_mod": "C:/Users/demen/Documents/Paradox Interactive/Imperator/mod/Terra-Indomita",
+	"path_to_base_game": "/run/media/nathan/OS/Program Files (x86)/Steam/steamapps/common/ImperatorRome/game",
+	"path_to_mod": "/run/media/nathan/OS/Users/demen/Documents/Paradox Interactive/Imperator/mod/Terra-Indomita",
 	"custom_maps": [
 		"bin/maps/culture.png",
 		"bin/maps/religion.png"

@@ -370,7 +370,13 @@ def get_province_names():
             province_names[province_data[0]] = province_data[1]
 
     for i in keys_with_links:
-        i = i.strip().replace('"', "").replace("$", "").replace("PROV", "").replace(" ", "")
+        i = (
+            i.strip()
+            .replace('"', "")
+            .replace("$", "")
+            .replace("PROV", "")
+            .replace(" ", "")
+        )
         i = i.split(":")
         try:
             i[1] = province_names[i[1]]
@@ -406,7 +412,12 @@ def save_all_changes():
         religion = i.popreligion.strip().lower()
         amount = i.popcount.get()
         if amount and amount > 0:
-            current_pops.append((poptype, [("culture", culture), ("religion", religion), ("amount", amount)]))
+            current_pops.append(
+                (
+                    poptype,
+                    [("culture", culture), ("religion", religion), ("amount", amount)],
+                )
+            )
 
     current_province_data = {
         "province_id": current_pid.get(),
@@ -424,11 +435,15 @@ def save_all_changes():
 
     changed_provinces_data[current_pid.get()] = current_province_data
 
-    application.province_data_frame.province_names[current_pid.get()] = current_province_name.get()
+    application.province_data_frame.province_names[
+        current_pid.get()
+    ] = current_province_name.get()
 
     if current_pid.get() in changed_provinces:
         file_to_write = id_to_file_dict[current_pid.get()]
-        provinces_to_write = [k for k, v in id_to_file_dict.items() if v == file_to_write]
+        provinces_to_write = [
+            k for k, v in id_to_file_dict.items() if v == file_to_write
+        ]
         Path("output").mkdir(parents=True, exist_ok=True)
         # Write the file
         with open("output/" + file_to_write, "w") as file:
@@ -440,7 +455,9 @@ def save_all_changes():
                     current_data = all_province_data[i]
                     pops, buildings = get_pops_and_buildings(current_data)
                     province_data = ProvinceData(current_data)
-                    name = application.province_data_frame.province_names[province_data.province_id]
+                    name = application.province_data_frame.province_names[
+                        province_data.province_id
+                    ]
                     province_data = {
                         "province_id": province_data.province_id,
                         "province_name": name,
@@ -479,22 +496,38 @@ def set_province_dataframe_from_id(province_id):
         }
 
     application.province_data_frame.startup_complete = False
-    application.province_data_frame.province_id = tk.StringVar(value=new_province_data["province_id"])
+    application.province_data_frame.province_id = tk.StringVar(
+        value=new_province_data["province_id"]
+    )
     application.province_data_frame.set_province_id_to_name()
-    application.province_data_frame.terrain = tk.StringVar(value=new_province_data["terrain"])
-    application.province_data_frame.culture = tk.StringVar(value=new_province_data["culture"])
-    application.province_data_frame.religion = tk.StringVar(value=new_province_data["religion"])
-    application.province_data_frame.trade_good = tk.StringVar(value=new_province_data["trade_good"])
-    application.province_data_frame.province_rank = tk.StringVar(value=new_province_data["province_rank"])
+    application.province_data_frame.terrain = tk.StringVar(
+        value=new_province_data["terrain"]
+    )
+    application.province_data_frame.culture = tk.StringVar(
+        value=new_province_data["culture"]
+    )
+    application.province_data_frame.religion = tk.StringVar(
+        value=new_province_data["religion"]
+    )
+    application.province_data_frame.trade_good = tk.StringVar(
+        value=new_province_data["trade_good"]
+    )
+    application.province_data_frame.province_rank = tk.StringVar(
+        value=new_province_data["province_rank"]
+    )
 
     if province_id in changed_provinces:
-        application.province_data_frame.civ_value = tk.IntVar(value=int(new_province_data["civ_value"]))
+        application.province_data_frame.civ_value = tk.IntVar(
+            value=int(new_province_data["civ_value"])
+        )
     else:
         application.province_data_frame.civ_value = tk.IntVar(
             value=int(new_province_data["civilization_value"])
         )
 
-    application.province_data_frame.holy_site = tk.StringVar(value=new_province_data["holy_site"])
+    application.province_data_frame.holy_site = tk.StringVar(
+        value=new_province_data["holy_site"]
+    )
     application.province_data_frame.buildings = new_province_data["buildings"]
     application.province_data_frame.pops = new_province_data["pops"]
 
@@ -503,13 +536,25 @@ def set_province_dataframe_from_id(province_id):
         -1, application.province_data_frame.province_name.get()
     )
 
-    application.province_data_frame.terrain_box.set(application.province_data_frame.terrain.get())
-    application.province_data_frame.culture_box.set(application.province_data_frame.culture.get())
-    application.province_data_frame.religion_box.set(application.province_data_frame.religion.get())
-    application.province_data_frame.trade_good_box.set(application.province_data_frame.trade_good.get())
-    application.province_data_frame.province_rank_box.set(application.province_data_frame.province_rank.get())
+    application.province_data_frame.terrain_box.set(
+        application.province_data_frame.terrain.get()
+    )
+    application.province_data_frame.culture_box.set(
+        application.province_data_frame.culture.get()
+    )
+    application.province_data_frame.religion_box.set(
+        application.province_data_frame.religion.get()
+    )
+    application.province_data_frame.trade_good_box.set(
+        application.province_data_frame.trade_good.get()
+    )
+    application.province_data_frame.province_rank_box.set(
+        application.province_data_frame.province_rank.get()
+    )
 
-    application.province_data_frame.civ_value_slider.set(application.province_data_frame.civ_value.get())
+    application.province_data_frame.civ_value_slider.set(
+        application.province_data_frame.civ_value.get()
+    )
 
     application.province_data_frame.civ_value_label.configure(
         text=f"Civilization Value: {application.province_data_frame.civ_value.get()}",
@@ -534,7 +579,9 @@ def set_province_dataframe_from_id(province_id):
 
     application.province_data_frame.pop_widgets = list()
     for i in application.province_data_frame.pops:
-        application.province_data_frame.create_pop(i[0], i[1][2][1], i[1][0][1], i[1][1][1])
+        application.province_data_frame.create_pop(
+            i[0], i[1][2][1], i[1][0][1], i[1][1][1]
+        )
 
     application.province_data_frame.startup_complete = True
 
@@ -593,11 +640,15 @@ class ZoomArea:
         """Initialize the ImageFrame"""
         self.imscale = 1.0  # scale for the canvas image zoom, public for outer classes
         self.__delta = 1.3  # zoom magnitude
-        self.__filter = Image.NEAREST  # could be: NEAREST, BILINEAR, BICUBIC and ANTIALIAS
+        self.__filter = (
+            Image.NEAREST
+        )  # could be: NEAREST, BILINEAR, BICUBIC and ANTIALIAS
         self.__previous_state = 0  # previous state of the keyboard
         self.path = image_path  # path to the image, should be public for outer classes
         # Create ImageFrame in placeholder widget
-        self.__imframe = customtkinter.CTkFrame(placeholder)  # placeholder of the ImageFrame object
+        self.__imframe = customtkinter.CTkFrame(
+            placeholder
+        )  # placeholder of the ImageFrame object
         # Vertical and horizontal scrollbars for canvas
         hbar = AutoScrollbar(self.__imframe, orientation="horizontal")
         vbar = AutoScrollbar(self.__imframe, orientation="vertical")
@@ -624,11 +675,21 @@ class ZoomArea:
         hbar.configure(command=self.__scroll_x)  # bind scrollbars to the canvas
         vbar.configure(command=self.__scroll_y)
         # Bind events to the Canvas
-        self.canvas.bind("<Configure>", lambda event: self.__show_image())  # canvas is resized
-        self.canvas.bind("<ButtonPress-1>", self.__move_from)  # remember canvas position
-        self.canvas.bind("<B1-Motion>", self.__move_to)  # move canvas to the new position
-        self.canvas.bind("<MouseWheel>", self.__wheel)  # zoom for Windows and MacOS, but not Linux
-        self.canvas.bind("<Button-5>", self.__wheel)  # zoom for Linux, wheel scroll down
+        self.canvas.bind(
+            "<Configure>", lambda event: self.__show_image()
+        )  # canvas is resized
+        self.canvas.bind(
+            "<ButtonPress-1>", self.__move_from
+        )  # remember canvas position
+        self.canvas.bind(
+            "<B1-Motion>", self.__move_to
+        )  # move canvas to the new position
+        self.canvas.bind(
+            "<MouseWheel>", self.__wheel
+        )  # zoom for Windows and MacOS, but not Linux
+        self.canvas.bind(
+            "<Button-5>", self.__wheel
+        )  # zoom for Linux, wheel scroll down
         self.canvas.bind("<Button-4>", self.__wheel)  # zoom for Linux, wheel scroll up
 
         self.canvas.bind("<Control-MouseWheel>", self.__fastwheel)
@@ -643,17 +704,23 @@ class ZoomArea:
 
         # Handle keystrokes in idle mode, because program slows down on a weak computers,
         # when too many key stroke events in the same time
-        self.canvas.bind("<Key>", lambda event: self.canvas.after_idle(self.__keystroke, event))
+        self.canvas.bind(
+            "<Key>", lambda event: self.canvas.after_idle(self.__keystroke, event)
+        )
         # Decide if this image huge or not
         self.__huge = False  # huge or not
         self.__huge_size = 14000  # define size of the huge image
         self.__band_width = 1024  # width of the tile band
-        Image.MAX_IMAGE_PIXELS = 1000000000  # suppress DecompressionBombError for big image
+        Image.MAX_IMAGE_PIXELS = (
+            1000000000  # suppress DecompressionBombError for big image
+        )
         with warnings.catch_warnings():  # suppress DecompressionBombWarning for big image
             warnings.simplefilter("ignore")
             # This next line fixes this: https://github.com/python-pillow/Pillow/issues/5631
             ImageFile.LOAD_TRUNCATED_IMAGES = True
-            self.__image = Image.open(self.path)  # open image, but down't load it into RAM
+            self.__image = Image.open(
+                self.path
+            )  # open image, but down't load it into RAM
         self.imwidth, self.imheight = self.__image.size  # public for outer classes
         if (
             self.imwidth * self.imheight > self.__huge_size * self.__huge_size
@@ -671,7 +738,9 @@ class ZoomArea:
         # Create image pyramid
         self.__pyramid = [self.smaller()] if self.__huge else [Image.open(self.path)]
         # Set ratio coefficient for image pyramid
-        self.__ratio = max(self.imwidth, self.imheight) / self.__huge_size if self.__huge else 1.0
+        self.__ratio = (
+            max(self.imwidth, self.imheight) / self.__huge_size if self.__huge else 1.0
+        )
         self.__curr_img = 0  # current image from the pyramid
         self.__scale = self.imscale * self.__ratio  # image pyramide scale
         self.__reduction = 2  # reduction degree of image pyramid
@@ -680,9 +749,13 @@ class ZoomArea:
             j += 1
             w /= self.__reduction  # divide on reduction degree
             h /= self.__reduction  # divide on reduction degree
-            self.__pyramid.append(self.__pyramid[-1].resize((int(w), int(h)), self.__filter))
+            self.__pyramid.append(
+                self.__pyramid[-1].resize((int(w), int(h)), self.__filter)
+            )
         # Put image into container rectangle and use it to set proper coordinates to the image
-        self.container = self.canvas.create_rectangle((0, 0, self.imwidth, self.imheight), width=0)
+        self.container = self.canvas.create_rectangle(
+            (0, 0, self.imwidth, self.imheight), width=0
+        )
         self.__show_image()  # show image on the canvas
         self.canvas.focus_set()  # set focus on the canvas
         self.canvas.bind("<Control-Button-1>", self.create_tooltip)
@@ -726,11 +799,21 @@ class ZoomArea:
         self.tooltip_text = tk.StringVar()
         if customtkinter.get_appearance_mode() == "Dark":
             self.tooltip = tk.Label(
-                self.__imframe, textvariable=self.tooltip_text, bg="#1c1c1c", fg="#ffffff", padx=5, pady=5
+                self.__imframe,
+                textvariable=self.tooltip_text,
+                bg="#1c1c1c",
+                fg="#ffffff",
+                padx=5,
+                pady=5,
             )
         else:
             self.tooltip = tk.Label(
-                self.__imframe, textvariable=self.tooltip_text, bg="#ffffff", fg="#1c1c1c", padx=5, pady=5
+                self.__imframe,
+                textvariable=self.tooltip_text,
+                bg="#ffffff",
+                fg="#1c1c1c",
+                padx=5,
+                pady=5,
             )
         self.tooltip.config(relief=tk.RAISED, bd=1, font=("Arial", 10))
         self.tooltip_text.set(f"Province ID: {province_id}{province_name}")
@@ -762,13 +845,17 @@ class ZoomArea:
             j += 1
             band = min(self.__band_width, self.imheight - i)  # width of the tile band
             self.__tile[1][3] = band  # set band width
-            self.__tile[2] = self.__offset + self.imwidth * i * 3  # tile offset (3 bytes per pixel)
+            self.__tile[2] = (
+                self.__offset + self.imwidth * i * 3
+            )  # tile offset (3 bytes per pixel)
             self.__image.close()
             self.__image = Image.open(self.path)  # reopen / reset image
             self.__image.size = (self.imwidth, band)  # set size of the tile band
             self.__image.tile = [self.__tile]  # set tile
             cropped = self.__image.crop((0, 0, self.imwidth, band))  # crop tile band
-            image.paste(cropped.resize((w, int(band * k) + 1), self.__filter), (0, int(i * k)))
+            image.paste(
+                cropped.resize((w, int(band * k) + 1), self.__filter), (0, int(i * k))
+            )
             i += band
         return image
 
@@ -818,7 +905,9 @@ class ZoomArea:
             self.canvas.canvasx(self.canvas.winfo_width()),
             self.canvas.canvasy(self.canvas.winfo_height()),
         )
-        box_img_int = tuple(map(int, box_image))  # convert to integer or it will not work properly
+        box_img_int = tuple(
+            map(int, box_image)
+        )  # convert to integer or it will not work properly
         # Get scroll region box
         box_scroll = [
             min(box_img_int[0], box_canvas[0]),
@@ -835,23 +924,37 @@ class ZoomArea:
             box_scroll[1] = box_img_int[1]
             box_scroll[3] = box_img_int[3]
         # Convert scroll region to tuple and to integer
-        self.canvas.configure(scrollregion=tuple(map(int, box_scroll)))  # set scroll region
-        x1 = max(box_canvas[0] - box_image[0], 0)  # get coordinates (x1,y1,x2,y2) of the image tile
+        self.canvas.configure(
+            scrollregion=tuple(map(int, box_scroll))
+        )  # set scroll region
+        x1 = max(
+            box_canvas[0] - box_image[0], 0
+        )  # get coordinates (x1,y1,x2,y2) of the image tile
         y1 = max(box_canvas[1] - box_image[1], 0)
         x2 = min(box_canvas[2], box_image[2]) - box_image[0]
         y2 = min(box_canvas[3], box_image[3]) - box_image[1]
-        if int(x2 - x1) > 0 and int(y2 - y1) > 0:  # show image if it in the visible area
-            if self.__huge and self.__curr_img < 0:  # show huge image, which does not fit in RAM
+        if (
+            int(x2 - x1) > 0 and int(y2 - y1) > 0
+        ):  # show image if it in the visible area
+            if (
+                self.__huge and self.__curr_img < 0
+            ):  # show huge image, which does not fit in RAM
                 h = int((y2 - y1) / self.imscale)  # height of the tile band
                 self.__tile[1][3] = h  # set the tile band height
-                self.__tile[2] = self.__offset + self.imwidth * int(y1 / self.imscale) * 3
+                self.__tile[2] = (
+                    self.__offset + self.imwidth * int(y1 / self.imscale) * 3
+                )
                 self.__image.close()
                 self.__image = Image.open(self.path)  # reopen / reset image
                 self.__image.size = (self.imwidth, h)  # set size of the tile band
                 self.__image.tile = [self.__tile]
-                image = self.__image.crop((int(x1 / self.imscale), 0, int(x2 / self.imscale), h))
+                image = self.__image.crop(
+                    (int(x1 / self.imscale), 0, int(x2 / self.imscale), h)
+                )
             else:  # show normal image
-                image = self.__pyramid[max(0, self.__curr_img)].crop(  # crop current img from pyramid
+                image = self.__pyramid[
+                    max(0, self.__curr_img)
+                ].crop(  # crop current img from pyramid
                     (
                         int(x1 / self.__scale),
                         int(y1 / self.__scale),
@@ -860,7 +963,9 @@ class ZoomArea:
                     )
                 )
             #
-            imagetk = ImageTk.PhotoImage(image.resize((int(x2 - x1), int(y2 - y1)), self.__filter))
+            imagetk = ImageTk.PhotoImage(
+                image.resize((int(x2 - x1), int(y2 - y1)), self.__filter)
+            )
             imageid = self.canvas.create_image(
                 max(box_canvas[0], box_img_int[0]),
                 max(box_canvas[1], box_img_int[1]),
@@ -868,7 +973,9 @@ class ZoomArea:
                 image=imagetk,
             )
             self.canvas.lower(imageid)  # set image into background
-            self.canvas.imagetk = imagetk  # keep an extra reference to prevent garbage-collection
+            self.canvas.imagetk = (
+                imagetk  # keep an extra reference to prevent garbage-collection
+            )
 
     def __move_from(self, event):
         """Remember previous coordinates for scrolling with the mouse"""
@@ -908,7 +1015,9 @@ class ZoomArea:
                 self.imscale /= self.__delta
                 scale /= self.__delta
             if event.delta > 0:  # scroll up, zoom in, bigger
-                i = float(min(self.canvas.winfo_width(), self.canvas.winfo_height()) >> 1)
+                i = float(
+                    min(self.canvas.winfo_width(), self.canvas.winfo_height()) >> 1
+                )
                 if i < self.imscale:
                     return  # 1 pixel is bigger than the visible area
                 self.imscale *= self.__delta
@@ -921,14 +1030,18 @@ class ZoomArea:
                 self.imscale /= self.__delta
                 scale /= self.__delta
             if event.num == 4 or event.delta == 120:  # scroll up, zoom in, bigger
-                i = float(min(self.canvas.winfo_width(), self.canvas.winfo_height()) >> 1)
+                i = float(
+                    min(self.canvas.winfo_width(), self.canvas.winfo_height()) >> 1
+                )
                 if i < self.imscale:
                     return  # 1 pixel is bigger than the visible area
                 self.imscale *= self.__delta
                 scale *= self.__delta
         # Take appropriate image from the pyramid
         k = self.imscale * self.__ratio  # temporary coefficient
-        self.__curr_img = min((-1) * int(math.log(k, self.__reduction)), len(self.__pyramid) - 1)
+        self.__curr_img = min(
+            (-1) * int(math.log(k, self.__reduction)), len(self.__pyramid) - 1
+        )
         self.__scale = k * math.pow(self.__reduction, max(0, self.__curr_img))
         #
         self.canvas.scale("all", x, y, scale, scale)  # rescale all objects
@@ -953,7 +1066,9 @@ class ZoomArea:
                 self.imscale /= self.__delta
                 scale /= self.__delta
             if event.delta > 0:  # scroll up, zoom in, bigger
-                i = float(min(self.canvas.winfo_width(), self.canvas.winfo_height()) >> 1)
+                i = float(
+                    min(self.canvas.winfo_width(), self.canvas.winfo_height()) >> 1
+                )
                 if i < self.imscale:
                     return  # 1 pixel is bigger than the visible area
                 self.imscale *= self.__delta
@@ -966,14 +1081,18 @@ class ZoomArea:
                 self.imscale /= self.__delta
                 scale /= self.__delta
             if event.num == 4 or event.delta == 120:  # scroll up, zoom in, bigger
-                i = float(min(self.canvas.winfo_width(), self.canvas.winfo_height()) >> 1)
+                i = float(
+                    min(self.canvas.winfo_width(), self.canvas.winfo_height()) >> 1
+                )
                 if i < self.imscale:
                     return  # 1 pixel is bigger than the visible area
                 self.imscale *= self.__delta
                 scale *= self.__delta
         # Take appropriate image from the pyramid
         k = self.imscale * self.__ratio  # temporary coefficient
-        self.__curr_img = min((-1) * int(math.log(k, self.__reduction)), len(self.__pyramid) - 1)
+        self.__curr_img = min(
+            (-1) * int(math.log(k, self.__reduction)), len(self.__pyramid) - 1
+        )
         self.__scale = k * math.pow(self.__reduction, max(0, self.__curr_img))
         #
         self.canvas.scale("all", x, y, scale, scale)  # rescale all objects
@@ -987,7 +1106,9 @@ class ZoomArea:
         if self.tooltip:
             self.tooltip.destroy()
             self.tooltip = ""
-        if event.state - self.__previous_state == 4:  # means that the Control key is pressed
+        if (
+            event.state - self.__previous_state == 4
+        ):  # means that the Control key is pressed
             pass  # do nothing if Control key is pressed
         else:
             self.__previous_state = event.state  # remember the last keystroke state
@@ -1006,7 +1127,9 @@ class ZoomArea:
         if self.__huge:  # image is huge and not totally in RAM
             band = bbox[3] - bbox[1]  # width of the tile band
             self.__tile[1][3] = band  # set the tile height
-            self.__tile[2] = self.__offset + self.imwidth * bbox[1] * 3  # set offset of the band
+            self.__tile[2] = (
+                self.__offset + self.imwidth * bbox[1] * 3
+            )  # set offset of the band
             self.__image.close()
             self.__image = Image.open(self.path)  # reopen / reset image
             self.__image.size = (self.imwidth, band)  # set size of the tile band
@@ -1076,7 +1199,9 @@ class BuildingFrame(customtkinter.CTkFrame):
         self.remove_buildings_button.bind("<Button-3>", self.remove_more_buildings)
 
     def update_label(self):
-        self.building_type_label.configure(text=f"{self.building_type} - {self.building_count.get()}")
+        self.building_type_label.configure(
+            text=f"{self.building_type} - {self.building_count.get()}"
+        )
 
     def remove_buildings(self):
         self.building_count = tk.IntVar(value=self.building_count.get() - 1)
@@ -1131,12 +1256,16 @@ class PopFrame(customtkinter.CTkFrame):
             self.popculture = "\n" + self.popculture
         if self.popreligion:
             self.popreligion = "\n" + self.popreligion
-        self.remove_pops_button = customtkinter.CTkButton(self, width=5, text="—", command=self.remove_pops)
+        self.remove_pops_button = customtkinter.CTkButton(
+            self, width=5, text="—", command=self.remove_pops
+        )
         self.remove_pops_button.grid(row=0, column=0, padx=(150, 7), pady=(0, 0))
         if self.popcount.get() == 1:
             self.remove_pops_button.configure(text="⨉")
 
-        self.add_pops_button = customtkinter.CTkButton(self, width=5, text="+", command=self.add_pops)
+        self.add_pops_button = customtkinter.CTkButton(
+            self, width=5, text="+", command=self.add_pops
+        )
         self.add_pops_button.grid(row=0, column=0, padx=(7, 150), pady=(0, 0))
 
         self.poptype_label = customtkinter.CTkLabel(
@@ -1322,7 +1451,9 @@ class AddPopsFrame(customtkinter.CTkFrame):
             width=177,
             variable=self.pop_count,
         )
-        self.pop_count_slider_one.grid(row=len(self.pop_type_list) - 1, column=0, padx=(88, 0), pady=(4, 0))
+        self.pop_count_slider_one.grid(
+            row=max(len(self.pop_type_list) - 1, 0), column=0, padx=(88, 0), pady=(4, 0)
+        )
         self.tooltip_1 = CTkToolTip(
             self.pop_count_slider_one,
             delay=0.5,
@@ -1340,7 +1471,9 @@ class AddPopsFrame(customtkinter.CTkFrame):
             command=self.culture_callback,
             variable=self.pop_culture,
         )
-        self.culture.grid(row=len(self.pop_type_list), column=0, padx=(0, 88), pady=(4, 0))
+        self.culture.grid(
+            row=len(self.pop_type_list), column=0, padx=(0, 88), pady=(4, 0)
+        )
         CTkToolTip(
             self.culture,
             delay=0.5,
@@ -1371,7 +1504,9 @@ class AddPopsFrame(customtkinter.CTkFrame):
             command=self.religion_callback,
             variable=self.pop_religion,
         )
-        self.religion.grid(row=len(self.pop_type_list), column=0, padx=(88, 0), pady=(4, 0))
+        self.religion.grid(
+            row=len(self.pop_type_list), column=0, padx=(88, 0), pady=(4, 0)
+        )
         CTkToolTip(
             self.religion,
             delay=0.5,
@@ -1403,7 +1538,9 @@ class AddPopsFrame(customtkinter.CTkFrame):
             border_width=2,
             text_color=("gray10", "#DCE4EE"),
         )
-        self.confirm_button.grid(row=len(self.pop_type_list) + 1, column=0, padx=(4, 0), pady=(15, 0))
+        self.confirm_button.grid(
+            row=len(self.pop_type_list) + 1, column=0, padx=(4, 0), pady=(15, 0)
+        )
         self.tooltip_2 = CTkToolTip(
             self.confirm_button,
             delay=0.5,
@@ -1506,10 +1643,14 @@ class ProvinceDataFrame(customtkinter.CTkScrollableFrame):
         )
         if OS != "Windows" or settings.menu_style == "menubar":
             # Move down when there is no titlebar
-            self.province_name_entry_label.grid(row=1, column=0, padx=(0, 143), pady=(15, 0))
-            self.province_name_entry.grid(row=1, column=0, padx=content_x, pady=(15, 0))
+            self.province_name_entry_label.grid(
+                row=1, column=0, padx=(0, 143), pady=(25, 0)
+            )
+            self.province_name_entry.grid(row=1, column=0, padx=content_x, pady=(25, 0))
         else:
-            self.province_name_entry_label.grid(row=1, column=0, padx=(0, 143), pady=(10, 0))
+            self.province_name_entry_label.grid(
+                row=1, column=0, padx=(0, 143), pady=(10, 0)
+            )
             self.province_name_entry.grid(row=1, column=0, padx=content_x, pady=(10, 0))
 
         self.set_province_id_to_name()
@@ -1632,7 +1773,10 @@ class ProvinceDataFrame(customtkinter.CTkScrollableFrame):
 
         # Province Rank option menu
         self.province_rank_box = customtkinter.CTkOptionMenu(
-            self, width=upper_box_width, values=settings.province_ranks, variable=self.province_rank
+            self,
+            width=upper_box_width,
+            values=settings.province_ranks,
+            variable=self.province_rank,
         )
         self.province_rank_box.grid(row=8, column=0, padx=content_x, pady=(20, 0))
         CTkScrollableDropdown(
@@ -1794,7 +1938,9 @@ class ProvinceDataFrame(customtkinter.CTkScrollableFrame):
 
     def update_civ_value(self, event):
         self.civ_value = tk.IntVar(value=int(self.civ_value_slider.get()))
-        self.civ_value_label.configure(text=f"Civilization Value: {self.civ_value.get()}")
+        self.civ_value_label.configure(
+            text=f"Civilization Value: {self.civ_value.get()}"
+        )
         self.set_changed()
 
     def holy_site_callback(self):
@@ -1807,22 +1953,33 @@ class ProvinceDataFrame(customtkinter.CTkScrollableFrame):
         # Run on every callback function.
         # This indicates that something has changed with this province and it needs to be written in the output seperate from the parsed in data
         global changed_provinces
-        if self.startup_complete is True and self.province_id.get() not in changed_provinces:
+        if (
+            self.startup_complete is True
+            and self.province_id.get() not in changed_provinces
+        ):
             changed_provinces.add(self.province_id.get())
 
     def set_province_id_to_name(self):
         try:
-            self.province_name = tk.StringVar(value=self.province_names[self.province_id.get()])
+            self.province_name = tk.StringVar(
+                value=self.province_names[self.province_id.get()]
+            )
         except KeyError:
-            self.province_name = tk.StringVar(value=f"EMPTY LOC - {self.province_id.get()}")
+            self.province_name = tk.StringVar(
+                value=f"EMPTY LOC - {self.province_id.get()}"
+            )
         self.province_name_entry.delete("0", tk.END)
         self.province_name_entry.insert(-1, self.province_name.get())
 
     def create_pop(self, poptype, popcount, popculture, popreligion):
         # Create a new pop frame
         self.current_open_pops_row += 1
-        new_pop = PopFrame(self, popinfo=(poptype.title(), popcount, popculture.title(), popreligion))
-        new_pop.grid(row=self.current_open_pops_row, column=0, padx=(12, 9), pady=(4, 0))
+        new_pop = PopFrame(
+            self, popinfo=(poptype.title(), popcount, popculture.title(), popreligion)
+        )
+        new_pop.grid(
+            row=self.current_open_pops_row, column=0, padx=(12, 9), pady=(4, 0)
+        )
         self.pop_widgets.append(new_pop)
         self.set_changed()
 
@@ -1830,7 +1987,9 @@ class ProvinceDataFrame(customtkinter.CTkScrollableFrame):
         # Create a new pop frame
         self.current_open_buildings_row += 1
         new_building = BuildingFrame(self, name, amount)
-        new_building.grid(row=self.current_open_buildings_row, column=0, padx=(12, 9), pady=(4, 0))
+        new_building.grid(
+            row=self.current_open_buildings_row, column=0, padx=(12, 9), pady=(4, 0)
+        )
         self.building_widgets.append(new_building)
         self.set_changed()
 
@@ -2093,7 +2252,9 @@ class SettingsWindow(customtkinter.CTkToplevel):
             border_width=2,
             text_color=("gray10", "#DCE4EE"),
         )
-        self.confirm_button.grid(column=0, row=1, columnspan=5, sticky="ew", padx=300, pady=(5, 10))
+        self.confirm_button.grid(
+            column=0, row=1, columnspan=5, sticky="ew", padx=300, pady=(5, 10)
+        )
         self.tooltip_2 = CTkToolTip(
             self.confirm_button,
             delay=0.5,
@@ -2206,14 +2367,18 @@ class CustomMapWindow(customtkinter.CTkToplevel):
         # Create map
         self.province_frame = customtkinter.CTkFrame(self, height=1000)
         ProvinceMap(self.province_frame, image_path)
-        self.province_frame.grid(row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew")
+        self.province_frame.grid(
+            row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew"
+        )
 
     def remake_map(self, new_map):
         self.province_frame.destroy()
         self.province_frame = customtkinter.CTkFrame(self, height=1000)
         ProvinceMap(self.province_frame, new_map)
         self.title(Path(new_map).name)
-        self.province_frame.grid(row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew")
+        self.province_frame.grid(
+            row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew"
+        )
 
 
 class App(customtkinter.CTk):
@@ -2252,12 +2417,16 @@ class App(customtkinter.CTk):
             "buildings": buildings,
             "pops": pops,
         }
-        self.province_data_frame = ProvinceDataFrame(self, default_province_data, height=1000)
+        self.province_data_frame = ProvinceDataFrame(
+            self, default_province_data, height=1000
+        )
 
         # Create province map
         self.province_frame = customtkinter.CTkFrame(self, height=1000)
         ProvinceMap(self.province_frame, settings.province_png)
-        self.province_frame.grid(row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew")
+        self.province_frame.grid(
+            row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew"
+        )
         self.grid_propagate(False)
 
         # Create menu
@@ -2327,7 +2496,9 @@ class App(customtkinter.CTk):
         self.province_frame.destroy()
         self.province_frame = customtkinter.CTkFrame(self, height=1000)
         ProvinceMap(self.province_frame, image_path)
-        self.province_frame.grid(row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew")
+        self.province_frame.grid(
+            row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew"
+        )
         self.grid_propagate(False)
         self.province_map = False
 
@@ -2350,23 +2521,28 @@ class App(customtkinter.CTk):
         self.province_frame.destroy()
         self.province_frame = customtkinter.CTkFrame(self, height=1000)
         ProvinceMap(self.province_frame, settings.province_png)
-        self.province_frame.grid(row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew")
+        self.province_frame.grid(
+            row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew"
+        )
         self.grid_propagate(False)
         self.province_map = True
 
     def load_map(self, map_to_load, mode):
-        if mode == "new_window":
+        if mode == "new_window" or OS != "Windows":
             if self.custom_map is None or not self.custom_map.winfo_exists():
                 self.custom_map = CustomMapWindow(map_to_load, self)
             else:
                 self.custom_map.remake_map(map_to_load)
                 self.custom_map.focus()
         else:
+            # This only work on windows? Otherwise it seems like I need to refactor it idk why
             self.grid_propagate(True)
             self.province_frame.destroy()
             self.province_frame = customtkinter.CTkFrame(self, height=1000)
             ProvinceMap(self.province_frame, map_to_load)
-            self.province_frame.grid(row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew")
+            self.province_frame.grid(
+                row=0, column=1, padx=(20, 0), pady=(10, 0), sticky="nsew"
+            )
             self.grid_propagate(False)
             self.province_map = False
 
@@ -2387,14 +2563,22 @@ class App(customtkinter.CTk):
         except Exception as e:
             print(e)
         try:
-            for i, province in enumerate(application.province_data_frame.province_names):
+            for i, province in enumerate(
+                application.province_data_frame.province_names
+            ):
                 loc_key = ""
                 if province not in changed_provinces:
-                    loc_key = f"PROV{i+1}: " + f'"{application.province_data_frame.province_names[province]}"'
+                    loc_key = (
+                        f"PROV{i+1}: "
+                        + f'"{application.province_data_frame.province_names[province]}"'
+                    )
                 else:
                     for item in changed_provinces:
                         if int(item) == i + 1:
-                            loc_key = f"PROV{i+1}: " + f'"{changed_provinces_data[item]["province_name"]}"'
+                            loc_key = (
+                                f"PROV{i+1}: "
+                                + f'"{changed_provinces_data[item]["province_name"]}"'
+                            )
                 if loc_key:
                     loc_keys.append(loc_key)
             Path("output").mkdir(parents=True, exist_ok=True)
@@ -2416,15 +2600,17 @@ if __name__ == "__main__":
     add_game_objects_to_settings()
 
     # Parse all province setup data
-    path_to_setup = Path(settings.path_to_mod + "\\setup\\provinces")
+    path_to_setup = Path(settings.path_to_mod + "/setup/provinces")
     path_to_base_game = Path(settings.path_to_base_game)
-
-    if not path_to_setup.is_dir():
-        error = "The path to your mod defined in settings.json is not a valid directory!"
-        raise NotADirectoryError(error)
 
     if not path_to_base_game.is_dir():
         error = "The path to the base game defined in settings.json is not a valid directory!"
+        raise NotADirectoryError(error)
+
+    if not path_to_setup.is_dir():
+        error = (
+            "The path to your mod defined in settings.json is not a valid directory!"
+        )
         raise NotADirectoryError(error)
 
     all_province_data = dict()
@@ -2453,6 +2639,7 @@ if __name__ == "__main__":
         raise RuntimeError(error)
 
     application = App()
-    application.after(0, lambda: application.state("zoomed"))
+    if OS == "Windows":
+        application.after(0, lambda: application.state("zoomed"))
     application.protocol("WM_DELETE_WINDOW", application.on_close)
     application.mainloop()
