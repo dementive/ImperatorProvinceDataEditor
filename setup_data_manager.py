@@ -455,9 +455,12 @@ def save_all_changes():
                     current_data = all_province_data[i]
                     pops, buildings = get_pops_and_buildings(current_data)
                     province_data = ProvinceData(current_data)
-                    name = application.province_data_frame.province_names[
-                        province_data.province_id
-                    ]
+                    try:
+                        name = application.province_data_frame.province_names[
+                            province_data.province_id
+                        ]
+                    except KeyError:
+                        name = f"EMPTY LOC - {province_data.province_id}"
                     province_data = {
                         "province_id": province_data.province_id,
                         "province_name": name,
@@ -2013,7 +2016,7 @@ class SettingsWindow(customtkinter.CTkToplevel):
         ]
 
         self.title("Settings")
-        self.geometry("750x325")
+        self.geometry("750x335")
 
         # Configure the grid
         self.rowconfigure(0, weight=1)
@@ -2388,7 +2391,7 @@ class App(customtkinter.CTk):
         self.province_map = True
 
         # Configure window
-        self.title("Imperator Province Data Editor")
+        self.title("Imperator Province Data Editor ")
         self.geometry(f"{1700}x{880}")
 
         # Configure grid layout
@@ -2431,7 +2434,7 @@ class App(customtkinter.CTk):
 
         # Create menu
         if OS == "Windows" and settings.menu_style == "titlebar":
-            self.menu = CTkTitleMenu(self, x_offset=self.winfo_width() + 9)
+            self.menu = CTkTitleMenu(self)
         else:
             self.menu = CTkMenuBar(self)
 
@@ -2579,7 +2582,7 @@ class App(customtkinter.CTk):
                                 f"PROV{i+1}: "
                                 + f'"{changed_provinces_data[item]["province_name"]}"'
                             )
-                if loc_key:
+                if loc_key and "EMPTY LOC" not in loc_key:
                     loc_keys.append(loc_key)
             Path("output").mkdir(parents=True, exist_ok=True)
             # Write the file
